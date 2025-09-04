@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G-IMMO | Gestion Locative</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --background: #f8fafc;
+            --sidebar-bg: #111827;
+            --card-bg: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --accent-color: #3b82f6;
+            --accent-color-dark: #2563eb;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+        }
+        .sidebar { width: var(--sidebar-width); background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); }
+        .sidebar-link { color: #d1d5db; }
+        .sidebar-link:hover { background-color: #1f2937; color: #ffffff; }
+        .sidebar-link.active { background-color: var(--accent-color); color: #ffffff; font-weight: 600; }
+        .btn { @apply inline-flex items-center justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200; }
+        .btn-primary { 
+            background-color: var(--accent-color); 
+            color: white;
+            box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06);
+        }
+        .btn-primary:hover { 
+            background-color: var(--accent-color-dark);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            transform: translateY(-1px);
+        }
+        .btn-danger { 
+            background-color: #ef4444; 
+            color: white;
+            box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06);
+        }
+        .btn-danger:hover { 
+            background-color: #dc2626;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            transform: translateY(-1px);
+        }
+        .btn-secondary { @apply text-gray-700 bg-gray-100 hover:bg-gray-200 focus:ring-gray-500; }
+        .card { background-color: var(--card-bg); border-radius: 0.75rem; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05); }
+        .status-badge { @apply px-2.5 py-0.5 text-xs font-medium rounded-full; }
+        .status-paid { @apply bg-green-100 text-green-800; }
+        .status-pending { @apply bg-yellow-100 text-yellow-800; }
+        .status-late { @apply bg-red-100 text-red-800; }
+        .status-refunded { @apply bg-blue-100 text-blue-800; }
+        .status-inactive { @apply bg-gray-100 text-gray-800; }
+        
+        @media print {
+            body * { visibility: hidden; }
+            #printable-report, #printable-report *, #receipt-content, #receipt-content * { visibility: visible; }
+            #printable-report, #receipt-content { position: absolute; left: 0; top: 0; width: 100%; padding: 2rem; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body class="h-full antialiased">
+
+    <!-- Auth Screen -->
+    <div id="auth-screen" class="hidden h-full flex items-center justify-center bg-gray-50">
+        <div class="w-full max-w-md">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold tracking-wider text-gray-800">G-IMMO</h1>
+                <p class="text-gray-500 mt-2">Connectez-vous pour gérer vos biens</p>
+            </div>
+            <div class="card p-8">
+                <form id="login-form" class="space-y-6">
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700">Adresse e-mail</label>
+                        <input type="email" name="email" id="email" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
+                        <input type="password" name="password" id="password" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
+                    </div>
+                    <p id="auth-error" class="text-sm text-red-600 hidden"></p>
+                    <div>
+                        <button type="submit" class="w-full btn btn-primary">Se connecter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Screen -->
+    <div id="app-screen" class="hidden h-full">
+        <div class="flex h-full">
+            <!-- Sidebar -->
+            <aside class="sidebar flex-shrink-0 flex flex-col no-print">
+                <div class="h-16 flex items-center justify-center border-b border-gray-700">
+                    <h1 class="text-2xl font-bold tracking-wider text-white">G-IMMO</h1>
+                </div>
+                <nav class="flex-1 p-4 space-y-1">
+                    <a href="#" id="nav-dashboard" class="sidebar-link flex items-center px-3 py-2.5 rounded-md text-sm"><i data-lucide="layout-dashboard" class="mr-3 h-5 w-5"></i> Dashboard</a>
+                    <p class="px-3 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Gestion</p>
+                    <a href="#" id="nav-properties" class="sidebar-link flex items-center px-3 py-2.5 rounded-md text-sm"><i data-lucide="home" class="mr-3 h-5 w-5"></i> Biens</a>
+                    <a href="#" id="nav-tenants" class="sidebar-link flex items-center px-3 py-2.5 rounded-md text-sm"><i data-lucide="users" class="mr-3 h-5 w-5"></i> Locataires</a>
+                    <a href="#" id="nav-leases" class="sidebar-link flex items-center px-3 py-2.5 rounded-md text-sm"><i data-lucide="file-text" class="mr-3 h-5 w-5"></i> Baux</a>
+                    <p class="px-3 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Finances</p>
+                    <a href="#" id="nav-accounting" class="sidebar-link flex items-center px-3 py-2.5 rounded-md text-sm"><i data-lucide="trending-up" class="mr-3 h-5 w-5"></i> Comptabilité</a>
+                </nav>
+                <div class="p-4 border-t border-gray-700">
+                     <a href="#" id="nav-profile" class="sidebar-link flex items-center px-3 py-2.5 rounded-md text-sm mb-2"><i data-lucide="user" class="mr-3 h-5 w-5"></i> Mon Profil</a>
+                     <a href="#" id="logout-btn" class="sidebar-link flex items-center px-3 py-2.5 rounded-md text-sm text-red-400 hover:bg-red-500 hover:text-white"><i data-lucide="log-out" class="mr-3 h-5 w-5"></i> Déconnexion</a>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main id="main-content" class="flex-1 flex flex-col"></main>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-container"></div>
+    <div id="printable-report-container" class="hidden"></div>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, onSnapshot, doc, getDoc, setDoc, orderBy, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyBj3jcQpgvfbTS3tM6WkPcfF2gKhYeS2-U", authDomain: "location-85222.firebaseapp.com", projectId: "location-85222", storageBucket: "location-85222.firebasestorage.app", messagingSenderId: "297096227425", appId: "1:297096227425:web:25d0f8c49c313e82269820" };
+        
+        let auth, db, userId, unsubscribeListeners = [];
+        const localData = { profile: {}, properties: [], tenants: [], leases: [], payments: {}, expenses: [] };
+        let currentView = null;
+
+        const dom = { 
+            main: document.getElementById('main-content'), 
+            modalContainer: document.getElementById('modal-container'),
+            authScreen: document.getElementById('auth-screen'),
+            appScreen: document.getElementById('app-screen'),
+            loginForm: document.getElementById('login-form'),
+            authError: document.getElementById('auth-error'),
+        };
+        
+        const formatCurrency = (value) => {
+            const number = parseFloat(value) || 0;
+            return new Intl.NumberFormat('fr-FR').format(number) + ' CFA';
+        }
+
+        const formatDate = (dateString) => new Date(dateString).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+        const templates = {
+            header: (title, button) => `<header class="h-16 bg-white/70 backdrop-blur-sm border-b border-border-color flex items-center justify-between px-6 flex-shrink-0 no-print"><h2 class="text-xl font-semibold text-text-primary">${title}</h2><div>${button || ''}</div></header>`,
+            contentArea: (content) => `<div class="flex-1 overflow-y-auto p-6">${content}</div>`,
+            createButton: (icon, text, id, type = 'primary') => `<button id="${id}" class="btn ${type === 'danger' ? 'btn-danger' : 'btn-primary'}"><i data-lucide="${icon}" class="mr-2 h-4 w-4"></i> ${text}</button>`,
+            modal: (id, title, form, size = 'max-w-lg') => `<div id="${id}" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-300 hidden no-print"><div class="card w-full ${size}"><div class="p-6 border-b border-border-color flex justify-between items-center"><h3 class="text-lg font-semibold">${title}</h3><button data-close-modal="${id}" class="text-gray-400 hover:text-gray-800"><i data-lucide="x"></i></button></div><div id="${id}-content">${form}</div></div></div>`,
+            formButtons: (modalId, isEdit = false) => `<div class="flex justify-end space-x-3"><button type="button" data-close-modal="${modalId}" class="btn btn-secondary">Annuler</button><button type="submit" class="btn btn-primary">${isEdit ? 'Mettre à jour' : 'Enregistrer'}</button></div>`,
+            statCard: (title, value, icon, color = 'blue') => `<div class="card p-5 flex items-center"><div class="bg-${color}-100 text-${color}-500 rounded-lg p-3 mr-4"><i data-lucide="${icon}"></i></div><div><p class="text-sm font-medium text-text-secondary">${title}</p><p class="text-2xl font-bold text-text-primary mt-1">${value}</p></div></div>`,
+            confirmDeleteModal: (id, itemType) => templates.modal(id, `Supprimer ${itemType}`, `<div class="p-6"><p>Êtes-vous sûr de vouloir supprimer cet élément ? Cette action est irréversible.</p></div><div class="p-6 bg-gray-50 rounded-b-lg flex justify-end space-x-3"><button type="button" data-close-modal="${id}" class="btn btn-secondary">Annuler</button><button id="confirm-delete-btn" class="btn btn-danger">Supprimer</button></div>`),
+            leaseDetailView: (lease) => {
+                const depositStatusBadge = {
+                    'Reçu': 'status-paid',
+                    'Remboursé': 'status-refunded',
+                    'Partiellement retenu': 'status-pending'
+                };
+                const depositBadge = depositStatusBadge[lease.depositStatus] || 'bg-gray-100 text-gray-800';
+
+                return `
+                ${templates.header(`Bail: ${lease.propertyName}`, `<button id="back-to-leases" class="btn btn-secondary"><i data-lucide="arrow-left" class="mr-2 h-4 w-4"></i> Retour</button>`)}
+                <div class="flex-1 overflow-y-auto p-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 card">
+                            <div class="p-5 border-b border-border-color flex justify-between items-center"><h3 class="font-semibold text-lg">Suivi des Paiements</h3>${templates.createButton('plus', 'Ajouter un paiement', 'add-payment-btn')}</div>
+                            <div class="table-wrapper border-0 rounded-b-lg"><table class="w-full text-sm"><thead><tr class="bg-gray-50"><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Période</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Paiement</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th></tr></thead><tbody id="payments-table-body"></tbody></table></div>
+                        </div>
+                        <div class="lg:col-span-1 space-y-6">
+                            <div class="card p-6"><h3 class="font-semibold text-lg mb-4">Détails du Bail</h3><div class="space-y-3 text-sm text-text-secondary"><p class="flex justify-between"><strong>Locataire:</strong> <span class="text-right text-text-primary">${lease.tenantName}</span></p><p class="flex justify-between"><strong>Bien:</strong> <span class="text-right text-text-primary">${lease.propertyName}</span></p><p class="flex justify-between"><strong>Loyer:</strong> <span class="font-semibold text-right text-text-primary">${formatCurrency(lease.rentAmount)}</span></p><p class="flex justify-between"><strong>Début:</strong> <span class="text-right text-text-primary">${formatDate(lease.startDate)}</span></p></div></div>
+                            <div class="card p-6"><h3 class="font-semibold text-lg mb-4">Dépôt de Garantie</h3>
+                                <div class="space-y-3 text-sm">
+                                    <p class="flex justify-between"><strong>Montant:</strong> <span class="font-semibold text-right text-text-primary">${formatCurrency(lease.depositAmount)}</span></p>
+                                    <p class="flex justify-between items-center"><strong>Statut:</strong> <span class="status-badge ${depositBadge}">${lease.depositStatus || 'N/A'}</span></p>
+                                    ${lease.depositReturnDate ? `<p class="flex justify-between"><strong>Restitué le:</strong> <span class="text-right text-text-primary">${formatDate(lease.depositReturnDate)}</span></p>` : ''}
+                                    ${lease.depositAmountReturned ? `<p class="flex justify-between"><strong>Montant restitué:</strong> <span class="text-right text-text-primary">${formatCurrency(lease.depositAmountReturned)}</span></p>` : ''}
+                                </div>
+                                <button id="manage-deposit-btn" class="w-full btn btn-secondary mt-4">Gérer la restitution</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`
+            },
+            propertyDetailView: (property) => {
+                const activeLease = localData.leases.find(l => l.propertyId === property.id);
+                const propertyExpenses = localData.expenses.filter(e => e.propertyId === property.id);
+                const propertyRevenues = Object.values(localData.payments).flat().filter(p => {
+                    const lease = localData.leases.find(l => l.id === p.leaseId);
+                    return lease && lease.propertyId === property.id;
+                });
+                const totalRevenues = propertyRevenues.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+                const totalExpenses = propertyExpenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
+                const netBalance = totalRevenues - totalExpenses;
+
+                return `
+                ${templates.header(`Bien: ${property.nickname}`, `<button id="back-to-properties" class="btn btn-secondary"><i data-lucide="arrow-left" class="mr-2 h-4 w-4"></i> Retour</button>`)}
+                <div class="flex-1 overflow-y-auto p-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                         <div class="card p-6">
+                            <h3 class="font-semibold text-lg mb-4">Statut d'Occupation</h3>
+                            ${activeLease ? `
+                                <div class="flex items-center text-green-600"><i data-lucide="check-circle" class="h-10 w-10 mr-4"></i><div><p class="font-bold text-xl">Loué</p><p>par ${activeLease.tenantName}</p></div></div>
+                            ` : `
+                                <div class="flex items-center text-gray-500"><i data-lucide="x-circle" class="h-10 w-10 mr-4"></i><div><p class="font-bold text-xl">Disponible</p></div></div>
+                            `}
+                        </div>
+                        <div class="card p-6 lg:col-span-2">
+                             <h3 class="font-semibold text-lg mb-4">Bilan Financier du Bien</h3>
+                             <div class="grid grid-cols-3 gap-4">
+                                ${templates.statCard('Revenus Totals', formatCurrency(totalRevenues), 'arrow-up', 'green')}
+                                ${templates.statCard('Charges Totales', formatCurrency(totalExpenses), 'arrow-down', 'red')}
+                                ${templates.statCard('Solde Net', formatCurrency(netBalance), 'scale')}
+                             </div>
+                        </div>
+                    </div>
+                    <div class="mt-6 card">
+                        <div class="p-5 border-b"><h3 class="font-semibold text-lg">Historique des Charges</h3></div>
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th></tr></thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                ${propertyExpenses.length > 0 ? propertyExpenses.map(e => `<tr><td class="px-6 py-4">${formatDate(e.date)}</td><td class="px-6 py-4">${e.type}</td><td class="px-6 py-4">${formatCurrency(e.amount)}</td></tr>`).join('') : `<tr><td colspan="3" class="text-center py-10 text-gray-500">Aucune charge enregistrée.</td></tr>`}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+            },
+            receipt: (lease, payment) => {
+                const property = localData.properties.find(p => p.id === lease.propertyId);
+                const tenant = localData.tenants.find(t => t.id === lease.tenantId);
+                const bailleur = localData.profile;
+                return `
+                <div id="receipt-content" class="p-8 font-serif text-gray-800">
+                    <div class="text-center mb-8"><h1 class="text-3xl font-bold">QUITTANCE DE LOYER</h1><p class="text-lg">Période du ${new Date(payment.period + '-02').toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}</p></div>
+                    <div class="grid grid-cols-2 gap-8 mb-8">
+                        <div><h2 class="font-bold border-b pb-1 mb-2">Bailleur</h2><p><strong>${bailleur.fullname || '[VOTRE NOM]'}</strong></p><p>${bailleur.address || '[Votre Adresse]'}</p><p>${bailleur.city || '[Ville, Code Postal]'}</p></div>
+                        <div><h2 class="font-bold border-b pb-1 mb-2">Locataire</h2><p><strong>${tenant.fullname}</strong></p><p>${property.address}</p></div>
+                    </div>
+                    <p class="mb-6">Je soussigné(e), propriétaire du logement désigné ci-dessus, déclare avoir reçu de ${tenant.fullname} la somme de <strong>${formatCurrency(payment.amount)}</strong>, pour le paiement du loyer.</p>
+                    <table class="w-full mb-8 border-collapse">
+                        <thead><tr class="bg-gray-100"><th class="border p-2 text-left">Désignation</th><th class="border p-2 text-right">Montant</th></tr></thead>
+                        <tbody><tr><td class="border p-2">Loyer</td><td class="border p-2 text-right">${formatCurrency(payment.amount)}</td></tr></tbody>
+                    </table>
+                    <div class="grid grid-cols-2 items-end mt-16"><p>Fait à ${bailleur.city || '[Votre Ville]'}, le ${formatDate(new Date())}</p><p class="text-right font-semibold">[Signature du Bailleur]</p></div>
+                </div>
+                <div class="p-6 bg-gray-50 flex justify-end space-x-3 no-print"><button id="print-receipt-btn" class="btn btn-primary"><i data-lucide="printer" class="mr-2 h-4 w-4"></i> Imprimer</button></div>`
+            },
+             profileView: (profile) => `
+                <div class="card max-w-2xl mx-auto">
+                    <form id="profile-form">
+                        <div class="p-6 space-y-4">
+                            <h3 class="text-lg font-semibold">Informations du Bailleur</h3>
+                            <p class="text-sm text-gray-500">Ces informations seront utilisées pour générer les quittances.</p>
+                            <div><label class="block text-sm font-medium">Nom Complet</label><input name="fullname" value="${profile.fullname || ''}" type="text" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div>
+                            <div><label class="block text-sm font-medium">Adresse</label><input name="address" value="${profile.address || ''}" type="text" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div>
+                            <div><label class="block text-sm font-medium">Ville & Code Postal</label><input name="city" value="${profile.city || ''}" type="text" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div>
+                        </div>
+                        <div class="p-6 bg-gray-50 rounded-b-lg flex justify-end">
+                            <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+                        </div>
+                    </form>
+                </div>`,
+            printableReport: (period, revenues, expenses, net, allPayments, allExpenses) => `
+                <div id="printable-report" class="font-sans">
+                     <div class="text-center mb-8">
+                        <h1 class="text-3xl font-bold">Bilan Financier</h1>
+                        <p class="text-lg">Pour la période de ${period}</p>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 mb-8 text-center">
+                        <div class="p-4 bg-green-100 rounded-lg"><p class="text-sm text-green-800">Total Revenus</p><p class="text-xl font-bold text-green-800">${formatCurrency(revenues)}</p></div>
+                        <div class="p-4 bg-red-100 rounded-lg"><p class="text-sm text-red-800">Total Charges</p><p class="text-xl font-bold text-red-800">${formatCurrency(expenses)}</p></div>
+                        <div class="p-4 bg-blue-100 rounded-lg"><p class="text-sm text-blue-800">Solde Net</p><p class="text-xl font-bold text-blue-800">${formatCurrency(net)}</p></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-8">
+                        <div>
+                            <h2 class="text-xl font-semibold mb-2 border-b pb-1">Détail des Revenus</h2>
+                            <table class="w-full text-sm">
+                                <thead><tr><th class="text-left py-1">Date</th><th class="text-left py-1">Locataire</th><th class="text-right py-1">Montant</th></tr></thead>
+                                <tbody>${allPayments.map(p => `<tr><td>${formatDate(p.paymentDate)}</td><td>${p.tenantName}</td><td class="text-right">${formatCurrency(p.amount)}</td></tr>`).join('')}</tbody>
+                            </table>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-semibold mb-2 border-b pb-1">Détail des Charges</h2>
+                             <table class="w-full text-sm">
+                                <thead><tr><th class="text-left py-1">Date</th><th class="text-left py-1">Type</th><th class="text-right py-1">Montant</th></tr></thead>
+                                <tbody>${allExpenses.map(e => `<tr><td>${formatDate(e.date)}</td><td>${e.type}</td><td class="text-right">${formatCurrency(e.amount)}</td></tr>`).join('')}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>`,
+        };
+        
+        document.addEventListener('DOMContentLoaded', initFirebase);
+
+        function initFirebase() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                onAuthStateChanged(auth, user => {
+                    if (user) {
+                        userId = user.uid;
+                        dom.authScreen.classList.add('hidden');
+                        dom.appScreen.classList.remove('hidden');
+                        setupApp();
+                        listenToFirestore();
+                    } else {
+                        userId = null;
+                        currentView = null;
+                        dom.authScreen.classList.remove('hidden');
+                        dom.appScreen.classList.add('hidden');
+                        unsubscribeAll();
+                    }
+                });
+                setupAuthForms();
+            } catch (error) { console.error("Firebase init error", error); }
+        }
+
+        function setupAuthForms() {
+            dom.loginForm.addEventListener('submit', async e => {
+                e.preventDefault();
+                const email = e.target.email.value;
+                const password = e.target.password.value;
+                const isRegistering = e.target.querySelector('button[type="submit"]').textContent === "S'inscrire";
+                dom.authError.classList.add('hidden');
+                try {
+                    if (isRegistering) await createUserWithEmailAndPassword(auth, email, password);
+                    else await signInWithEmailAndPassword(auth, email, password);
+                } catch (error) {
+                    dom.authError.textContent = "Erreur : email ou mot de passe incorrect.";
+                    dom.authError.classList.remove('hidden');
+                }
+            });
+            
+            dom.authScreen.addEventListener('click', e => {
+                if (e.target.id === 'show-register') {
+                    e.preventDefault();
+                    const form = dom.loginForm;
+                    const button = form.querySelector('button[type="submit"]');
+                    const p = e.target.parentElement;
+                    if(button.textContent === "Se connecter") {
+                        button.textContent = "S'inscrire";
+                        p.innerHTML = `Déjà un compte ? <a href="#" id="show-register" class="font-medium text-accent-color hover:underline">Se connecter</a>`;
+                    } else {
+                        button.textContent = "Se connecter";
+                        p.innerHTML = `Pas de compte ? <a href="#" id="show-register" class="font-medium text-accent-color hover:underline">S'inscrire</a>`;
+                    }
+                }
+            });
+        }
+
+        function setupApp() {
+            document.querySelectorAll('#app-screen .sidebar-link').forEach(link => link.addEventListener('click', e => { e.preventDefault(); showPanel(e.currentTarget.id.replace('nav-', '')); }));
+            document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
+            if(!currentView) showPanel('dashboard');
+            renderAllModals();
+        }
+
+        function showPanel(panelName, contextId = null) {
+            if (panelName.startsWith('detail-')) {
+                currentView = `${panelName}-${contextId}`;
+                const type = panelName.split('-')[1];
+                if (type === 'lease') renderLeaseDetail(contextId);
+                if (type === 'property') renderPropertyDetail(contextId);
+            } else {
+                currentView = panelName;
+                document.querySelectorAll('#app-screen .sidebar-link').forEach(link => link.classList.remove('active'));
+                document.getElementById(`nav-${panelName}`)?.classList.add('active');
+                
+                const panels = {
+                    dashboard: renderDashboard,
+                    properties: () => renderListView('Biens', 'properties', ['Nom', 'Adresse', 'Type', 'Statut', ''], p => `<td class="font-medium">${p.nickname}</td><td>${p.address}</td><td>${p.type}</td><td>${renderPropertyStatusBadge(p.status)}</td>${renderActionsMenu(p.id, 'property')}`),
+                    tenants: () => renderListView('Locataires', 'tenants', ['Nom', 'Prénom', 'Téléphone', ''], t => `<td class="font-medium">${t.lastname}</td><td>${t.firstname}</td><td>${t.phone}</td>${renderActionsMenu(t.id, 'tenant')}`),
+                    leases: () => renderListView('Baux', 'leases', ['Bien', 'Locataire', 'Loyer', 'Statut du mois', ''], l => `<td class="font-medium">${l.propertyName}</td><td>${l.tenantName}</td><td>${formatCurrency(l.rentAmount)}</td><td>${renderLeaseStatusBadge(l.status)}</td>${renderActionsMenu(l.id, 'lease')}`),
+                    accounting: renderAccounting,
+                    profile: renderProfile
+                };
+                if(panels[panelName]) panels[panelName]();
+            }
+            lucide.createIcons();
+        }
+
+        function renderDashboard() {
+            updateLeaseStatuses();
+            const monthlyStatus = { paid: 0, pending: 0, late: 0 };
+            localData.leases.forEach(lease => {
+                if (lease.status === 'Payé') monthlyStatus.paid++;
+                else if (lease.status === 'En attente') monthlyStatus.pending++;
+                else if (lease.status === 'En retard') monthlyStatus.late++;
+            });
+            const content = `<div class="card mb-6"><div class="p-5 border-b border-border-color"><h3 class="font-semibold text-lg">Statut des Loyers pour ${new Date().toLocaleString('fr-FR', { month: 'long' })}</h3></div><div class="grid grid-cols-1 md:grid-cols-3"><div class="p-5 text-center border-b md:border-b-0 md:border-r border-border-color"><p class="text-sm font-medium text-text-secondary">Payé</p><p class="text-3xl font-bold text-green-500 mt-1">${monthlyStatus.paid}</p></div><div class="p-5 text-center border-b md:border-b-0 md:border-r border-border-color"><p class="text-sm font-medium text-text-secondary">En attente</p><p class="text-3xl font-bold text-yellow-500 mt-1">${monthlyStatus.pending}</p></div><div class="p-5 text-center"><p class="text-sm font-medium text-text-secondary">En retard</p><p class="text-3xl font-bold text-red-500 mt-1">${monthlyStatus.late}</p></div></div></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">${templates.statCard('Revenu Total', formatCurrency(Object.values(localData.payments).flat().reduce((s, p) => s + parseFloat(p.amount), 0)), 'dollar-sign')}${templates.statCard('Biens Gérés', localData.properties.length, 'home')}${templates.statCard('Locataires', localData.tenants.length, 'users')}${templates.statCard('Baux Actifs', localData.leases.length, 'file-text')}</div>`;
+            dom.main.innerHTML = templates.header('Dashboard') + templates.contentArea(content);
+        }
+
+        function renderProfile() {
+            dom.main.innerHTML = templates.header('Mon Profil') + templates.contentArea(templates.profileView(localData.profile));
+            document.getElementById('profile-form').addEventListener('submit', async e => {
+                e.preventDefault();
+                const data = { fullname: e.target.fullname.value, address: e.target.address.value, city: e.target.city.value };
+                const path = `users/${userId}/profile/info`;
+                try {
+                    await setDoc(doc(db, path), data);
+                    alert('Profil mis à jour !');
+                } catch (error) { console.error('Error updating profile:', error); }
+            });
+        }
+        
+        function renderAccounting() {
+            const headerActions = `<div class="flex space-x-2">${templates.createButton('arrow-down', 'Ajouter une Charge', 'add-expense-btn', 'danger')}</div>`;
+            const content = `<div id="accounting-summary" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div><div class="card mt-6"><div class="p-5 border-b flex justify-between items-center"><div class="flex items-center space-x-4"><div><label for="month-filter" class="text-sm font-medium text-gray-700">Filtrer par mois :</label><input type="month" id="month-filter" class="ml-2 border-gray-300 rounded-md shadow-sm"></div></div><div class="space-x-2"><button id="export-csv-btn" class="btn btn-secondary"><i data-lucide="download" class="mr-2 h-4 w-4"></i> Exporter (CSV)</button><button id="print-report-btn" class="btn btn-secondary"><i data-lucide="printer" class="mr-2 h-4 w-4"></i> Imprimer le Bilan</button></div></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-x-6"><div class="p-5"><h3 class="font-semibold mb-2 text-lg">Revenus</h3><div id="revenues-table-container"></div></div><div class="p-5 lg:border-l"><h3 class="font-semibold mb-2 text-lg">Charges</h3><div id="expenses-table-container"></div></div></div></div>`;
+            dom.main.innerHTML = templates.header('Bilan Comptable', headerActions) + templates.contentArea(content);
+            updateAccountingView();
+            lucide.createIcons();
+            document.getElementById('month-filter').addEventListener('change', updateAccountingView);
+            document.getElementById('export-csv-btn').addEventListener('click', exportToCSV);
+            document.getElementById('print-report-btn').addEventListener('click', printReport);
+            document.getElementById('add-expense-btn').addEventListener('click', () => openModal('add-expense-modal'));
+        }
+
+        function updateAccountingView() {
+            const filterValue = document.getElementById('month-filter')?.value || '';
+            let allPayments = Object.values(localData.payments).flat();
+            let allExpenses = localData.expenses;
+            if (filterValue) {
+                allPayments = allPayments.filter(p => p.period === filterValue);
+                allExpenses = allExpenses.filter(e => e.date.startsWith(filterValue));
+            }
+            const totalRevenue = allPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+            const totalExpenses = allExpenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
+            const netResult = totalRevenue - totalExpenses;
+            const summaryContainer = document.getElementById('accounting-summary');
+            if(summaryContainer) {
+                summaryContainer.innerHTML = `${templates.statCard('Total Revenus', formatCurrency(totalRevenue), 'arrow-up-circle', 'green')}${templates.statCard('Total Charges', formatCurrency(totalExpenses), 'arrow-down-circle', 'red')}${templates.statCard('Solde Net', formatCurrency(netResult), 'scale', 'blue')}`;
+                lucide.createIcons();
+            }
+            const revenuesContainer = document.getElementById('revenues-table-container');
+            if(revenuesContainer) {
+                const tableContent = allPayments.length > 0 ? allPayments.sort((a,b) => new Date(b.paymentDate) - new Date(a.paymentDate)).map(p => `<tr><td class="py-2">${formatDate(p.paymentDate)}</td><td class="py-2">${p.tenantName}</td><td class="py-2 text-right font-semibold">${formatCurrency(p.amount)}</td></tr>`).join('') : `<tr><td colspan="3" class="text-center py-10 text-gray-500">Aucun revenu.</td></tr>`;
+                revenuesContainer.innerHTML = `<table class="w-full text-sm"><thead class="border-b"><tr><th class="py-2 text-left font-medium">Date</th><th class="py-2 text-left font-medium">Locataire</th><th class="py-2 text-right font-medium">Montant</th></tr></thead><tbody class="divide-y divide-gray-200">${tableContent}</tbody></table>`;
+            }
+            const expensesContainer = document.getElementById('expenses-table-container');
+             if(expensesContainer) {
+                const tableContent = allExpenses.length > 0 ? allExpenses.sort((a,b) => new Date(b.date) - new Date(a.date)).map(e => `<tr data-id="${e.id}"><td class="py-2">${formatDate(e.date)}</td><td class="py-2">${e.type}</td><td class="py-2 text-right font-semibold">${formatCurrency(e.amount)}</td><td class="py-2 text-right">${renderActionsMenu(e.id, 'expense')}</td></tr>`).join('') : `<tr><td colspan="4" class="text-center py-10 text-gray-500">Aucune charge.</td></tr>`;
+                expensesContainer.innerHTML = `<table class="w-full text-sm"><thead class="border-b"><tr><th class="py-2 text-left font-medium">Date</th><th class="py-2 text-left font-medium">Type</th><th class="py-2 text-right font-medium">Montant</th><th class="py-2 text-right font-medium"></th></tr></thead><tbody class="divide-y divide-gray-200">${tableContent}</tbody></table>`;
+                
+                expensesContainer.querySelectorAll('[data-action-menu-button]').forEach(button => {
+                    const menu = button.nextElementSibling;
+                    button.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        document.querySelectorAll('[data-action-menu]').forEach(m => { if (m !== menu) m.classList.add('hidden'); });
+                        menu.classList.toggle('hidden');
+                    });
+                });
+
+                expensesContainer.querySelectorAll('.edit-btn, .delete-btn').forEach(btn => btn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    const id = e.currentTarget.dataset.id;
+                    const type = e.currentTarget.dataset.type;
+                    if(btn.classList.contains('edit-btn')) openModal(`edit-${type}-modal`, id);
+                    else openDeleteConfirmation(id, type);
+                }));
+                 lucide.createIcons();
+            }
+        }
+        
+        function exportToCSV() {
+            const filterValue = document.getElementById('month-filter').value;
+            let allPayments = Object.values(localData.payments).flat();
+            let allExpenses = localData.expenses;
+            if (filterValue) {
+                allPayments = allPayments.filter(p => p.period === filterValue);
+                allExpenses = allExpenses.filter(e => e.date.startsWith(filterValue));
+            }
+
+            let csvContent = "Type;Date;Description;Montant (CFA)\n";
+            allPayments.forEach(p => csvContent += `Revenu;${p.paymentDate};Loyer ${p.tenantName};${p.amount}\n`);
+            allExpenses.forEach(e => csvContent += `Charge;${e.date};${e.type} - ${e.description || ''};${e.amount}\n`);
+            
+            const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `bilan_comptable_${filterValue || 'global'}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function printReport() {
+            const filterValue = document.getElementById('month-filter').value;
+            let allPayments = Object.values(localData.payments).flat();
+            let allExpenses = localData.expenses;
+            if (filterValue) {
+                allPayments = allPayments.filter(p => p.period === filterValue);
+                allExpenses = allExpenses.filter(e => e.date.startsWith(filterValue));
+            }
+            const totalRevenue = allPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+            const totalExpenses = allExpenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
+            const netResult = totalRevenue - totalExpenses;
+            const period = filterValue ? new Date(filterValue + '-02').toLocaleString('fr-FR', {month: 'long', year: 'numeric'}) : 'Globale';
+
+            const container = document.getElementById('printable-report-container');
+            container.innerHTML = templates.printableReport(period, totalRevenue, totalExpenses, netResult, allPayments, allExpenses);
+            window.print();
+        }
+        
+        function renderListView(title, collectionName, headers, rowRenderer) {
+            updateLeaseStatuses();
+            const singularName = { properties: 'property', tenants: 'tenant', leases: 'lease' }[collectionName];
+            const btnId = `add-${singularName}-btn`;
+            const button = templates.createButton('plus', `Nouveau`, btnId);
+            const table = `<div class="card"><div class="table-wrapper"><table class="w-full text-sm"><thead class="bg-gray-50"><tr>${headers.map(h => `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${h}</th>`).join('')}</tr></thead><tbody id="${collectionName}-table-body" class="bg-white divide-y divide-gray-200"></tbody></table></div></div>`;
+            dom.main.innerHTML = templates.header(title, button) + templates.contentArea(table);
+            document.getElementById(btnId).addEventListener('click', () => openModal(`add-${singularName}-modal`));
+            updateTable(collectionName, localData[collectionName], rowRenderer);
+        }
+
+        function renderLeaseDetail(leaseId) {
+            const lease = localData.leases.find(l => l.id === leaseId);
+            if(lease) {
+                currentView = `detail-lease-${leaseId}`;
+                dom.main.innerHTML = templates.leaseDetailView(lease);
+                document.getElementById('back-to-leases').addEventListener('click', () => showPanel('leases'));
+                document.getElementById('add-payment-btn').addEventListener('click', () => openModal('add-payment-modal', leaseId));
+                document.getElementById('manage-deposit-btn').addEventListener('click', () => openModal('manage-deposit-modal', leaseId));
+                updatePaymentsTable(leaseId);
+                lucide.createIcons();
+            } else {
+                showPanel('leases'); 
+            }
+        }
+        
+        function renderPropertyDetail(propertyId) {
+            const property = localData.properties.find(p => p.id === propertyId);
+            if (property) {
+                currentView = `detail-property-${propertyId}`;
+                dom.main.innerHTML = templates.propertyDetailView(property);
+                document.getElementById('back-to-properties').addEventListener('click', () => showPanel('properties'));
+                lucide.createIcons();
+            } else {
+                showPanel('properties');
+            }
+        }
+
+        function updateTable(collectionName, data, rowRenderer) {
+            const tbody = document.getElementById(`${collectionName}-table-body`);
+            if (!tbody) return;
+            tbody.innerHTML = data.length === 0 ? `<tr><td colspan="100%" class="text-center py-10 text-gray-500">Aucun élément.</td></tr>` : data.map(item => `<tr data-id="${item.id}" class="cursor-pointer hover:bg-gray-50">${rowRenderer(item)}</tr>`).join('');
+            
+            tbody.querySelectorAll('tr').forEach(tr => {
+                tr.addEventListener('click', (e) => {
+                    if (e.target.closest('[data-action-menu-button]')) return;
+                    if (collectionName === 'leases') showPanel('detail-lease', tr.dataset.id);
+                    if (collectionName === 'properties') showPanel('detail-property', tr.dataset.id);
+                });
+            });
+            tbody.querySelectorAll('[data-action-menu-button]').forEach(button => {
+                const menu = button.nextElementSibling;
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    document.querySelectorAll('[data-action-menu]').forEach(m => { if (m !== menu) m.classList.add('hidden'); });
+                    menu.classList.toggle('hidden');
+                });
+            });
+            tbody.querySelectorAll('.edit-btn, .delete-btn').forEach(btn => btn.addEventListener('click', e => {
+                e.stopPropagation();
+                const id = e.currentTarget.dataset.id;
+                const type = e.currentTarget.dataset.type;
+                if(btn.classList.contains('edit-btn')) {
+                    openModal(`edit-${type}-modal`, id);
+                } else {
+                    openDeleteConfirmation(id, type);
+                }
+            }));
+        }
+
+        function updatePaymentsTable(leaseId) {
+            const tbody = document.getElementById('payments-table-body');
+            if(!tbody) return;
+            const payments = localData.payments[leaseId] || [];
+            tbody.innerHTML = payments.length === 0 ? `<tr><td colspan="4" class="text-center py-10 text-gray-500">Aucun paiement.</td></tr>` : payments.map(p => `<tr><td class="px-6 py-4">${new Date(p.period + '-02').toLocaleString('fr-FR', {month:'long', year:'numeric'})}</td><td class="px-6 py-4">${formatDate(p.paymentDate)}</td><td class="px-6 py-4">${formatCurrency(p.amount)}</td><td class="px-6 py-4"><button class="generate-receipt-btn text-accent-color hover:underline" data-payment-id="${p.id}" data-lease-id="${leaseId}"><i class="inline-block mr-1 h-4 w-4" data-lucide="receipt"></i> Quittance</button></td></tr>`).join('');
+            tbody.querySelectorAll('.generate-receipt-btn').forEach(btn => btn.addEventListener('click', (e) => {
+                const { leaseId, paymentId } = e.currentTarget.dataset;
+                openModal('receipt-modal', { leaseId, paymentId });
+            }));
+            lucide.createIcons();
+        }
+        
+        document.body.addEventListener('click', (e) => {
+             if (!e.target.closest('[data-action-menu-button]')) {
+                document.querySelectorAll('[data-action-menu]').forEach(menu => menu.classList.add('hidden'));
+             }
+        });
+
+        function renderActionsMenu(id, type) {
+            return `<td class="text-right px-6 py-4 relative">
+                <button data-action-menu-button="${id}" class="text-gray-400 hover:text-accent-color"><i data-lucide="more-vertical" class="pointer-events-none"></i></button>
+                <div data-action-menu="${id}" class="absolute right-10 top-0 z-10 w-32 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden">
+                    <div class="py-1" role="none">
+                        <a href="#" class="edit-btn text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" data-id="${id}" data-type="${type}">Modifier</a>
+                        <a href="#" class="delete-btn text-red-600 block px-4 py-2 text-sm hover:bg-gray-100" data-id="${id}" data-type="${type}">Supprimer</a>
+                    </div>
+                </div>
+            </td>`;
+        }
+        
+        function renderAllModals() {
+            const propertyFormContent = `<div><label class="text-sm font-medium text-gray-700">Nom</label><input name="nickname" type="text" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div><div><label class="text-sm font-medium text-gray-700">Adresse</label><input name="address" type="text" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div><div><label class="text-sm font-medium text-gray-700">Type</label><select name="type" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"><option>Appartement</option><option>Maison</option><option>Bureau</option><option>Studio</option></select></div><div><label class="text-sm font-medium text-gray-700">Statut</label><select name="status" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"><option>Actif</option><option>Inactif</option></select></div>`;
+            const propertyForm = `<form id="add-property-modal-form" class="p-6 space-y-4">${propertyFormContent}<div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('add-property-modal')}</div></form>`;
+            const editPropertyForm = `<form id="edit-property-modal-form" class="p-6 space-y-4"><input type="hidden" name="id">${propertyFormContent}<div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('edit-property-modal', true)}</div></form>`;
+
+            const tenantFormContent = `<div class="grid grid-cols-2 gap-4"><div><label class="text-sm font-medium text-gray-700">Nom</label><input name="lastname" type="text" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div><div><label class="text-sm font-medium text-gray-700">Prénom</label><input name="firstname" type="text" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div></div><div><label class="text-sm font-medium text-gray-700">Téléphone</label><input name="phone" type="tel" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div>`;
+            const tenantForm = `<form id="add-tenant-modal-form" class="p-6 space-y-4">${tenantFormContent}<div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('add-tenant-modal')}</div></form>`;
+            const editTenantForm = `<form id="edit-tenant-modal-form" class="p-6 space-y-4"><input type="hidden" name="id">${tenantFormContent}<div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('edit-tenant-modal', true)}</div></form>`;
+            
+            const leaseFormContent = `<div><label class="text-sm font-medium text-gray-700">Bien</label><select name="property" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></select></div><div><label class="text-sm font-medium text-gray-700">Locataire</label><select name="tenant" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></select></div><div class="grid grid-cols-2 gap-4"><div><label class="text-sm font-medium text-gray-700">Début</label><input name="startDate" type="date" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div><div><label class="text-sm font-medium text-gray-700">Loyer (CFA)</label><input name="rentAmount" type="number" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div></div><div><label class="text-sm font-medium text-gray-700">Dépôt de Garantie (CFA)</label><input name="depositAmount" type="number" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div>`;
+            const leaseForm = `<form id="add-lease-modal-form" class="p-6 space-y-4">${leaseFormContent}<div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('add-lease-modal')}</div></form>`;
+            const editLeaseForm = `<form id="edit-lease-modal-form" class="p-6 space-y-4"><input type="hidden" name="id">${leaseFormContent}<div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('edit-lease-modal', true)}</div></form>`;
+
+            const expenseFormContent = `<div><label class="text-sm font-medium text-gray-700">Bien Associé</label><select name="property" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></select></div><div class="grid grid-cols-2 gap-4"><div><label class="text-sm font-medium text-gray-700">Date</label><input name="date" type="date" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div><div><label class="text-sm font-medium text-gray-700">Montant (CFA)</label><input name="amount" type="number" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div></div><div><label class="text-sm font-medium text-gray-700">Type de charge</label><select name="type" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"><option>Travaux</option><option>Impôts</option><option>Syndic</option><option>Assurance</option><option>Autre</option></select></div><div><label class="text-sm font-medium text-gray-700">Description</label><textarea name="description" rows="2" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></textarea></div>`;
+            const expenseForm = `<form id="add-expense-modal-form" class="p-6 space-y-4">${expenseFormContent}<div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('add-expense-modal')}</div></form>`;
+            const editExpenseForm = `<form id="edit-expense-modal-form" class="p-6 space-y-4"><input type="hidden" name="id">${expenseFormContent}<div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('edit-expense-modal', true)}</div></form>`;
+
+            const paymentFormContent = `<input type="hidden" name="leaseId"><div class="grid grid-cols-2 gap-4"><div><label class="text-sm font-medium text-gray-700">Période</label><input name="period" type="month" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div><div><label class="text-sm font-medium text-gray-700">Montant (CFA)</label><input name="amount" type="number" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div></div><div><label class="text-sm font-medium text-gray-700">Date de paiement</label><input name="paymentDate" type="date" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div>`;
+            const paymentForm = `<form id="add-payment-modal-form" class="p-6 space-y-4">${paymentFormContent}<div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('add-payment-modal')}</div></form>`;
+            
+            const manageDepositForm = `<form id="manage-deposit-modal-form" class="p-6 space-y-4">
+                <input type="hidden" name="id">
+                <div><label class="text-sm font-medium">Statut</label><select name="depositStatus" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"><option>Reçu</option><option>Remboursé</option><option>Partiellement retenu</option></select></div>
+                <div><label class="text-sm font-medium">Date de restitution</label><input name="depositReturnDate" type="date" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div>
+                <div><label class="text-sm font-medium">Montant restitué (CFA)</label><input name="depositAmountReturned" type="number" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div>
+                <div><label class="text-sm font-medium">Notes (justification si retenue)</label><textarea name="depositNotes" rows="2" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></textarea></div>
+                <div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('manage-deposit-modal', true)}</div>
+            </form>`;
+
+            dom.modalContainer.innerHTML = `
+                ${templates.modal('add-property-modal', 'Ajouter un Bien', propertyForm)}
+                ${templates.modal('edit-property-modal', 'Modifier le Bien', editPropertyForm)}
+                ${templates.modal('add-tenant-modal', 'Ajouter un Locataire', tenantForm)}
+                ${templates.modal('edit-tenant-modal', 'Modifier le Locataire', editTenantForm)}
+                ${templates.modal('add-lease-modal', 'Créer un Bail', leaseForm)}
+                ${templates.modal('edit-lease-modal', 'Modifier le Bail', editLeaseForm)}
+                ${templates.modal('add-expense-modal', 'Ajouter une Charge', expenseForm)}
+                ${templates.modal('edit-expense-modal', 'Modifier la Charge', editExpenseForm)}
+                ${templates.modal('add-payment-modal', 'Ajouter un Paiement', paymentForm)}
+                ${templates.modal('manage-deposit-modal', 'Gérer le Dépôt de Garantie', manageDepositForm)}
+                ${templates.modal('receipt-modal', 'Quittance de Loyer', '', 'max-w-4xl')}
+                ${templates.confirmDeleteModal('confirm-delete-modal', 'l\'élément')}
+            `;
+            setupModalControlsAndForms();
+        }
+
+        function setupModalControlsAndForms() {
+            dom.modalContainer.addEventListener('click', e => {
+                const closeButton = e.target.closest('[data-close-modal]');
+                if(closeButton) closeModal(closeButton.dataset.closeModal);
+                if(e.target.classList.contains('fixed')) closeModal(e.target.id);
+            });
+            
+            const forms = {
+                'add-property': { collection: 'properties', data: f => ({ nickname: f.nickname.value, address: f.address.value, type: f.type.value, status: f.status.value }) },
+                'edit-property': { collection: 'properties', data: f => ({ nickname: f.nickname.value, address: f.address.value, type: f.type.value, status: f.status.value }), isUpdate: true },
+                'add-tenant': { collection: 'tenants', data: f => ({ firstname: f.firstname.value, lastname: f.lastname.value, fullname: `${f.firstname.value} ${f.lastname.value}`, phone: f.phone.value }) },
+                'edit-tenant': { collection: 'tenants', data: f => ({ firstname: f.firstname.value, lastname: f.lastname.value, fullname: `${f.firstname.value} ${f.lastname.value}`, phone: f.phone.value }), isUpdate: true },
+                'add-lease': { collection: 'leases', data: f => ({ propertyId: f.property.value, propertyName: f.property.options[f.property.selectedIndex].text, tenantId: f.tenant.value, tenantName: f.tenant.options[f.tenant.selectedIndex].text, startDate: f.startDate.value, rentAmount: f.rentAmount.value, depositAmount: f.depositAmount.value, depositStatus: 'Reçu' })},
+                'edit-lease': { collection: 'leases', data: f => ({ propertyId: f.property.value, propertyName: f.property.options[f.property.selectedIndex].text, tenantId: f.tenant.value, tenantName: f.tenant.options[f.tenant.selectedIndex].text, startDate: f.startDate.value, rentAmount: f.rentAmount.value, depositAmount: f.depositAmount.value }), isUpdate: true },
+                'add-expense': { collection: 'expenses', data: f => ({ propertyId: f.property.value, propertyName: f.property.options[f.property.selectedIndex].text, date: f.date.value, amount: f.amount.value, type: f.type.value, description: f.description.value }) },
+                'edit-expense': { collection: 'expenses', data: f => ({ propertyId: f.property.value, propertyName: f.property.options[f.property.selectedIndex].text, date: f.date.value, amount: f.amount.value, type: f.type.value, description: f.description.value }), isUpdate: true },
+                'add-payment': { collection: 'payments', data: f => {
+                    const lease = localData.leases.find(l => l.id === f.leaseId.value);
+                    return { period: f.period.value, amount: f.amount.value, paymentDate: f.paymentDate.value, leaseId: f.leaseId.value, tenantName: lease.tenantName, propertyName: lease.propertyName };
+                }},
+                'manage-deposit': { collection: 'leases', data: f => ({ depositStatus: f.depositStatus.value, depositReturnDate: f.depositReturnDate.value, depositAmountReturned: f.depositAmountReturned.value, depositNotes: f.depositNotes.value }), isUpdate: true },
+            };
+
+            for (const [formIdPrefix, config] of Object.entries(forms)) {
+                const formElement = document.getElementById(`${formIdPrefix}-modal-form`);
+                if(formElement) {
+                    formElement.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const data = config.data(e.target);
+                        const modalId = `${formIdPrefix}-modal`;
+                        if (config.isUpdate) {
+                            await handleUpdate(e.target.id.value, config.collection, data);
+                        } else if (config.collection === 'payments') {
+                            await handleCreate(`leases/${e.target.leaseId.value}/payments`, data);
+                        } else {
+                            await handleCreate(config.collection, data);
+                        }
+                        closeModal(modalId);
+                    });
+                }
+            }
+        }
+        
+        function openModal(modalId, context = null) {
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+            const form = modal.querySelector('form');
+            if(form) form.reset();
+            
+            const contentContainer = document.getElementById(`${modalId}-content`);
+            
+            if (modalId === 'receipt-modal' && context) {
+                const { leaseId, paymentId } = context;
+                const lease = localData.leases.find(l => l.id === leaseId);
+                const payment = (localData.payments[leaseId] || []).find(p => p.id === paymentId);
+                if (lease && payment) {
+                    contentContainer.innerHTML = templates.receipt(lease, payment);
+                }
+            } else if (modalId.startsWith('edit-') && context) {
+                const type = modalId.split('-')[1];
+                const collectionName = {property: 'properties', tenant: 'tenants', lease: 'leases', expense: 'expenses'}[type];
+                const item = localData[collectionName]?.find(d => d.id === context);
+                if (item) {
+                    form.id.value = item.id;
+                    if(type === 'property') { form.nickname.value = item.nickname; form.address.value = item.address; form.type.value = item.type; form.status.value = item.status || 'Actif'; } 
+                    else if (type === 'tenant') { form.firstname.value = item.firstname || ''; form.lastname.value = item.lastname || ''; form.phone.value = item.phone || ''; } 
+                    else if (type === 'lease') {
+                        populateSelect(form.property, localData.properties, '...', d => d.id, d => d.nickname, item.propertyId);
+                        populateSelect(form.tenant, localData.tenants, '...', d => d.id, d => d.fullname, item.tenantId);
+                        form.startDate.value = item.startDate; form.rentAmount.value = item.rentAmount;
+                        form.depositAmount.value = item.depositAmount || '';
+                    } else if (type === 'expense') {
+                        populateSelect(form.property, localData.properties, '...', d => d.id, d => d.nickname, item.propertyId);
+                        form.date.value = item.date;
+                        form.amount.value = item.amount;
+                        form.type.value = item.type;
+                        form.description.value = item.description;
+                    }
+                }
+            } else if (modalId === 'manage-deposit-modal' && context) {
+                const lease = localData.leases.find(l => l.id === context);
+                if (lease) {
+                    form.id.value = lease.id;
+                    form.depositStatus.value = lease.depositStatus || 'Reçu';
+                    form.depositReturnDate.value = lease.depositReturnDate || '';
+                    form.depositAmountReturned.value = lease.depositAmountReturned || '';
+                    form.depositNotes.value = lease.depositNotes || '';
+                }
+            } else if (modalId === 'add-lease-modal') {
+                const rentedPropertyIds = localData.leases.map(l => l.propertyId);
+                const availableProperties = localData.properties.filter(p => !rentedPropertyIds.includes(p.id) && p.status !== 'Inactif');
+                populateSelect(form.property, availableProperties, 'Sélectionner un bien disponible', d => d.id, d => d.nickname);
+                populateSelect(form.tenant, localData.tenants, 'Sélectionner un locataire', d => d.id, d => d.fullname);
+            } else if (modalId === 'add-expense-modal') {
+                 populateSelect(form.property, localData.properties, 'Sélectionner un bien', d => d.id, d => d.nickname);
+            } else if (modalId === 'add-payment-modal' && context) {
+                form.leaseId.value = context;
+            }
+            
+            modal.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function openDeleteConfirmation(id, type) {
+            const modal = document.getElementById('confirm-delete-modal');
+            if(!modal) return;
+            modal.classList.remove('hidden');
+            lucide.createIcons();
+            const confirmBtn = document.getElementById('confirm-delete-btn');
+            const collectionName = {property: 'properties', tenant: 'tenants', lease: 'leases', expense: 'expenses'}[type];
+            
+            const newConfirmBtn = confirmBtn.cloneNode(true);
+            confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+            
+            newConfirmBtn.addEventListener('click', async () => {
+                await handleDelete(id, collectionName);
+                closeModal('confirm-delete-modal');
+            }, { once: true });
+        }
+        
+        function closeModal(modalId) { 
+            const modal = document.getElementById(modalId)
+            if(modal) modal.classList.add('hidden');
+        }
+
+        function populateSelect(selectEl, data, placeholder, valueFn, textFn, selectedValue = null) {
+            selectEl.innerHTML = `<option value="">${placeholder}</option>`;
+            data.forEach(item => { const option = document.createElement('option'); option.value = valueFn(item); option.textContent = textFn(item); if (selectedValue === option.value) { option.selected = true; } selectEl.appendChild(option); });
+        }
+        
+        function listenToFirestore() {
+            unsubscribeAll();
+            const collectionsToListen = ['properties', 'tenants', 'leases', 'expenses'];
+            collectionsToListen.forEach(name => {
+                const path = `users/${userId}/${name}`;
+                const q = query(collection(db, path));
+                const unsubscribe = onSnapshot(q, (snapshot) => {
+                    localData[name] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    if (name === 'leases' || name === 'properties') listenToSubCollectionPayments();
+                    else refreshCurrentView();
+                }, error => console.error(`Error listening to ${name}:`, error));
+                unsubscribeListeners.push(unsubscribe);
+            });
+            const profilePath = `users/${userId}/profile/info`;
+            const unsubProfile = onSnapshot(doc(db, profilePath), (doc) => {
+                localData.profile = doc.data() || {};
+                refreshCurrentView();
+            }, error => console.error(`Error listening to profile:`, error));
+            unsubscribeListeners.push(unsubProfile);
+        }
+        
+        function listenToSubCollectionPayments() {
+            let leaseCount = localData.leases.length;
+            let loadedCount = 0;
+            const tempPayments = {};
+
+            if (leaseCount === 0) {
+                localData.payments = {};
+                refreshCurrentView();
+                return;
+            }
+
+            localData.leases.forEach(lease => {
+                const path = `users/${userId}/leases/${lease.id}/payments`;
+                const q = query(collection(db, path), orderBy('paymentDate', 'desc'));
+                const unsubscribe = onSnapshot(q, (snapshot) => {
+                    tempPayments[lease.id] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    loadedCount++;
+                    if (loadedCount >= leaseCount) { 
+                        localData.payments = tempPayments;
+                        refreshCurrentView();
+                    }
+                }, error => console.error(`Error listening to payments for lease ${lease.id}:`, error));
+                unsubscribeListeners.push(unsubscribe);
+            });
+        }
+
+        function unsubscribeAll() { unsubscribeListeners.forEach(unsub => unsub()); unsubscribeListeners = []; }
+        
+        function refreshCurrentView() {
+            if (currentView) {
+                if (currentView.startsWith('detail-')) {
+                    const [_, type, id] = currentView.split('-');
+                    showPanel(`detail-${type}`, id);
+                } else {
+                    showPanel(currentView);
+                }
+            }
+        }
+
+        function updateLeaseStatuses() {
+            const now = new Date();
+            const currentMonthStr = now.toISOString().slice(0, 7); // "YYYY-MM"
+            const today = now.getDate();
+            localData.leases.forEach(lease => {
+                const leaseStartDate = new Date(lease.startDate);
+                if (leaseStartDate > now) { lease.status = 'Futur'; return; }
+                const paymentsForLease = localData.payments[lease.id] || [];
+                const paidThisMonth = paymentsForLease.some(p => p.period === currentMonthStr);
+                if (paidThisMonth) { lease.status = 'Payé'; } 
+                else { lease.status = (today > 10) ? 'En retard' : 'En attente'; }
+            });
+        }
+
+        function renderLeaseStatusBadge(status) {
+            const statuses = { 'Payé': 'status-paid', 'En attente': 'status-pending', 'En retard': 'status-late', 'Futur': 'bg-gray-100 text-gray-800' };
+            const badgeClass = statuses[status] || 'bg-gray-100 text-gray-800';
+            return `<span class="status-badge ${badgeClass}">${status}</span>`;
+        }
+        
+        function renderPropertyStatusBadge(status) {
+            const statuses = { 'Actif': 'status-paid', 'Inactif': 'status-inactive' };
+            const badgeClass = statuses[status] || 'bg-gray-100 text-gray-800';
+            return `<span class="status-badge ${badgeClass}">${status}</span>`;
+        }
+
+        async function handleCreate(collectionName, data) {
+            const path = `users/${userId}/${collectionName}`;
+            try { await addDoc(collection(db, path), data); } 
+            catch (error) { console.error(`Erreur ajout:`, error); }
+        }
+
+        async function handleUpdate(docId, collectionName, data) {
+            const path = `users/${userId}/${collectionName}`;
+            try { await updateDoc(doc(db, path, docId), data); }
+            catch (error) { console.error("Update Error:", error); }
+        }
+
+        async function handleDelete(docId, collectionName) {
+            const path = `users/${userId}/${collectionName}`;
+            try { await deleteDoc(doc(db, path, docId)); }
+            catch (error) { console.error("Delete Error:", error); }
+        }
+    </script>
+</body>
+</html>
+
