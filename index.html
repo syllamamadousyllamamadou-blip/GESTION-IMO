@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G-IMMO | Gestion Locative</title>
+    <title>DVK-GES | Gestion Locative</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -112,6 +112,7 @@
                     <a href="#" id="nav-leases" class="sidebar-link flex items-center px-3 py-2.5 rounded-md text-sm"><i data-lucide="file-text" class="mr-3 h-5 w-5"></i> Baux</a>
                     <p class="px-3 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Finances</p>
                     <a href="#" id="nav-accounting" class="sidebar-link flex items-center px-3 py-2.5 rounded-md text-sm"><i data-lucide="trending-up" class="mr-3 h-5 w-5"></i> Comptabilité</a>
+                    <a href="#" id="nav-treasury" class="sidebar-link flex items-center px-3 py-2.5 rounded-md text-sm"><i data-lucide="piggy-bank" class="mr-3 h-5 w-5"></i> Trésorerie</a>
                 </nav>
                 <div class="p-4 border-t border-gray-700">
                      <a href="#" id="nav-profile" class="sidebar-link flex items-center px-3 py-2.5 rounded-md text-sm mb-2"><i data-lucide="user" class="mr-3 h-5 w-5"></i> Mon Profil</a>
@@ -136,7 +137,7 @@
         const firebaseConfig = { apiKey: "AIzaSyBj3jcQpgvfbTS3tM6WkPcfF2gKhYeS2-U", authDomain: "location-85222.firebaseapp.com", projectId: "location-85222", storageBucket: "location-85222.firebasestorage.app", messagingSenderId: "297096227425", appId: "1:297096227425:web:25d0f8c49c313e82269820" };
         
         let auth, db, userId, unsubscribeListeners = [];
-        const localData = { profile: {}, properties: [], tenants: [], leases: [], payments: {}, expenses: [] };
+        const localData = { profile: {}, properties: [], tenants: [], leases: [], payments: {}, expenses: [], personal_transactions: [] };
         let currentView = null;
 
         const dom = { 
@@ -177,7 +178,7 @@
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="lg:col-span-2 card">
                             <div class="p-5 border-b border-border-color flex justify-between items-center"><h3 class="font-semibold text-lg">Suivi des Paiements</h3>${templates.createButton('plus', 'Ajouter un paiement', 'add-payment-btn')}</div>
-                            <div class="table-wrapper border-0 rounded-b-lg"><table class="w-full text-sm"><thead><tr class="bg-gray-50"><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Période</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Paiement</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th></tr></thead><tbody id="payments-table-body"></tbody></table></div>
+                            <div class="table-wrapper border-0 rounded-b-lg"><table class="w-full text-sm"><thead><tr class="bg-gray-50"><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Période</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Paiement</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th><th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th></tr></thead><tbody id="payments-table-body"></tbody></table></div>
                         </div>
                         <div class="lg:col-span-1 space-y-6">
                             <div class="card p-6"><h3 class="font-semibold text-lg mb-4">Détails du Bail</h3><div class="space-y-3 text-sm text-text-secondary"><p class="flex justify-between"><strong>Locataire:</strong> <span class="text-right text-text-primary">${lease.tenantName}</span></p><p class="flex justify-between"><strong>Bien:</strong> <span class="text-right text-text-primary">${lease.propertyName}</span></p><p class="flex justify-between"><strong>Loyer:</strong> <span class="font-semibold text-right text-text-primary">${formatCurrency(lease.rentAmount)}</span></p><p class="flex justify-between"><strong>Début:</strong> <span class="text-right text-text-primary">${formatDate(lease.startDate)}</span></p></div></div>
@@ -246,7 +247,7 @@
                     <div class="text-center mb-8"><h1 class="text-3xl font-bold">QUITTANCE DE LOYER</h1><p class="text-lg">Période du ${new Date(payment.period + '-02').toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}</p></div>
                     <div class="grid grid-cols-2 gap-8 mb-8">
                         <div><h2 class="font-bold border-b pb-1 mb-2">Bailleur</h2><p><strong>${bailleur.fullname || '[VOTRE NOM]'}</strong></p><p>${bailleur.address || '[Votre Adresse]'}</p><p>${bailleur.city || '[Ville, Code Postal]'}</p></div>
-                        <div><h2 class="font-bold border-b pb-1 mb-2">Locataire</h2><p><strong>${tenant.fullname}</strong></p><p>${property.address}</p></div>
+                        <div><h2 class="font-bold border-b pb-1 mb-2">Locataire</h2><p><strong>${tenant.fullname}</strong></p><p>Pour le bien : <strong>${lease.propertyName}</strong></p><p>${property.address}</p></div>
                     </div>
                     <p class="mb-6">Je soussigné(e), propriétaire du logement désigné ci-dessus, déclare avoir reçu de ${tenant.fullname} la somme de <strong>${formatCurrency(payment.amount)}</strong>, pour le paiement du loyer.</p>
                     <table class="w-full mb-8 border-collapse">
@@ -254,8 +255,7 @@
                         <tbody><tr><td class="border p-2">Loyer</td><td class="border p-2 text-right">${formatCurrency(payment.amount)}</td></tr></tbody>
                     </table>
                     <div class="grid grid-cols-2 items-end mt-16"><p>Fait à ${bailleur.city || '[Votre Ville]'}, le ${formatDate(new Date())}</p><p class="text-right font-semibold">[Signature du Bailleur]</p></div>
-                </div>
-                <div class="p-6 bg-gray-50 flex justify-end space-x-3 no-print"><button id="print-receipt-btn" class="btn btn-primary"><i data-lucide="printer" class="mr-2 h-4 w-4"></i> Imprimer</button></div>`
+                </div>`
             },
              profileView: (profile) => `
                 <div class="card max-w-2xl mx-auto">
@@ -333,30 +333,12 @@
                 e.preventDefault();
                 const email = e.target.email.value;
                 const password = e.target.password.value;
-                const isRegistering = e.target.querySelector('button[type="submit"]').textContent === "S'inscrire";
                 dom.authError.classList.add('hidden');
                 try {
-                    if (isRegistering) await createUserWithEmailAndPassword(auth, email, password);
-                    else await signInWithEmailAndPassword(auth, email, password);
+                    await signInWithEmailAndPassword(auth, email, password);
                 } catch (error) {
                     dom.authError.textContent = "Erreur : email ou mot de passe incorrect.";
                     dom.authError.classList.remove('hidden');
-                }
-            });
-            
-            dom.authScreen.addEventListener('click', e => {
-                if (e.target.id === 'show-register') {
-                    e.preventDefault();
-                    const form = dom.loginForm;
-                    const button = form.querySelector('button[type="submit"]');
-                    const p = e.target.parentElement;
-                    if(button.textContent === "Se connecter") {
-                        button.textContent = "S'inscrire";
-                        p.innerHTML = `Déjà un compte ? <a href="#" id="show-register" class="font-medium text-accent-color hover:underline">Se connecter</a>`;
-                    } else {
-                        button.textContent = "Se connecter";
-                        p.innerHTML = `Pas de compte ? <a href="#" id="show-register" class="font-medium text-accent-color hover:underline">S'inscrire</a>`;
-                    }
                 }
             });
         }
@@ -381,10 +363,11 @@
                 
                 const panels = {
                     dashboard: renderDashboard,
-                    properties: () => renderListView('Biens', 'properties', ['Nom', 'Adresse', 'Type', 'Statut', ''], p => `<td class="font-medium">${p.nickname}</td><td>${p.address}</td><td>${p.type}</td><td>${renderPropertyStatusBadge(p.status)}</td>${renderActionsMenu(p.id, 'property')}`),
-                    tenants: () => renderListView('Locataires', 'tenants', ['Nom', 'Prénom', 'Téléphone', ''], t => `<td class="font-medium">${t.lastname}</td><td>${t.firstname}</td><td>${t.phone}</td>${renderActionsMenu(t.id, 'tenant')}`),
-                    leases: () => renderListView('Baux', 'leases', ['Bien', 'Locataire', 'Loyer', 'Statut du mois', ''], l => `<td class="font-medium">${l.propertyName}</td><td>${l.tenantName}</td><td>${formatCurrency(l.rentAmount)}</td><td>${renderLeaseStatusBadge(l.status)}</td>${renderActionsMenu(l.id, 'lease')}`),
+                    properties: () => renderListView('Biens', 'properties', ['Nom', 'Adresse', 'Type', 'Statut', ''], p => `<td class="px-6 py-4 whitespace-nowrap">${p.nickname}</td><td class="px-6 py-4 whitespace-nowrap">${p.address}</td><td class="px-6 py-4 whitespace-nowrap">${p.type}</td><td class="px-6 py-4 whitespace-nowrap">${renderPropertyStatusBadge(p.status)}</td><td class="px-6 py-4 whitespace-nowrap text-right">${renderActionsMenu(p.id, 'property')}</td>`),
+                    tenants: () => renderListView('Locataires', 'tenants', ['Nom', 'Prénom', 'Téléphone', ''], t => `<td class="px-6 py-4 whitespace-nowrap">${t.lastname}</td><td class="px-6 py-4 whitespace-nowrap">${t.firstname}</td><td class="px-6 py-4 whitespace-nowrap">${t.phone}</td><td class="px-6 py-4 whitespace-nowrap text-right">${renderActionsMenu(t.id, 'tenant')}</td>`),
+                    leases: () => renderListView('Baux', 'leases', ['Bien', 'Locataire', 'Loyer', 'Statut du mois', ''], l => `<td class="px-6 py-4 whitespace-nowrap">${l.propertyName}</td><td class="px-6 py-4 whitespace-nowrap">${l.tenantName}</td><td class="px-6 py-4 whitespace-nowrap">${formatCurrency(l.rentAmount)}</td><td class="px-6 py-4 whitespace-nowrap">${renderLeaseStatusBadge(l.status)}</td><td class="px-6 py-4 whitespace-nowrap text-right">${renderActionsMenu(l.id, 'lease')}</td>`),
                     accounting: renderAccounting,
+                    treasury: renderTreasury,
                     profile: renderProfile
                 };
                 if(panels[panelName]) panels[panelName]();
@@ -429,6 +412,70 @@
             document.getElementById('add-expense-btn').addEventListener('click', () => openModal('add-expense-modal'));
         }
 
+        function renderTreasury() {
+             const headerActions = `<div class="flex space-x-2">${templates.createButton('repeat', 'Ajouter une Transaction', 'add-transaction-btn')}</div>`;
+             const content = `
+                <div id="treasury-summary"></div>
+                <div class="mt-6">
+                    <div class="card">
+                     <div class="p-5 border-b flex justify-between items-center">
+                        <h3 class="font-semibold text-lg">Transactions Personnelles</h3>
+                        <button id="export-treasury-csv-btn" class="btn btn-secondary"><i data-lucide="download" class="mr-2 h-4 w-4"></i> Exporter (CSV)</button>
+                     </div>
+                    <div id="transactions-container"></div>
+                    </div>
+                </div>`;
+            dom.main.innerHTML = templates.header('Trésorerie Personnelle', headerActions) + templates.contentArea(content);
+            updateTreasuryView();
+            lucide.createIcons();
+            document.getElementById('add-transaction-btn').addEventListener('click', () => openModal('add-transaction-modal'));
+             document.getElementById('export-treasury-csv-btn').addEventListener('click', exportTreasuryToCSV);
+        }
+        
+        function updateTreasuryView() {
+            const currentMonth = new Date().toISOString().slice(0, 7);
+            const monthlyTransactions = localData.personal_transactions.filter(t => t.date.startsWith(currentMonth));
+            const totalIncome = monthlyTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + parseFloat(t.amount), 0);
+            const totalExpense = monthlyTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + parseFloat(t.amount), 0);
+            const savings = totalIncome - totalExpense;
+
+            const summaryContainer = document.getElementById('treasury-summary');
+            if (summaryContainer) {
+                summaryContainer.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    ${templates.statCard('Revenus du Mois', formatCurrency(totalIncome), 'arrow-up-circle', 'green')}
+                    ${templates.statCard('Dépenses du Mois', formatCurrency(totalExpense), 'arrow-down-circle', 'red')}
+                    ${templates.statCard('Capacité d\'Épargne', formatCurrency(savings), 'piggy-bank', 'blue')}
+                </div>`;
+                lucide.createIcons();
+            }
+            
+            const transactionsContainer = document.getElementById('transactions-container');
+            if (transactionsContainer) {
+                const tableContent = localData.personal_transactions.sort((a,b) => new Date(b.date) - new Date(a.date)).map(t => {
+                    const isIncome = t.type === 'income';
+                    return `<tr data-id="${t.id}"><td class="p-3">${formatDate(t.date)}</td><td class="p-3">${t.category}</td><td class="p-3 text-right font-semibold ${isIncome ? 'text-green-600' : 'text-red-600'}">${isIncome ? '+' : '-'} ${formatCurrency(t.amount)}</td><td class="p-3 text-right">${renderActionsMenu(t.id, 'personal_transaction')}</td></tr>`;
+                }).join('');
+                transactionsContainer.innerHTML = `<table class="w-full text-sm"><thead class="border-b bg-gray-50"><tr><th class="p-3 text-left font-medium">Date</th><th class="p-3 text-left font-medium">Catégorie</th><th class="p-3 text-right font-medium">Montant</th><th></th></tr></thead><tbody class="divide-y">${tableContent}</tbody></table>`;
+
+                transactionsContainer.querySelectorAll('[data-action-menu-button]').forEach(button => {
+                    const menu = button.nextElementSibling;
+                    button.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        document.querySelectorAll('[data-action-menu]').forEach(m => { if (m !== menu) m.classList.add('hidden'); });
+                        menu.classList.toggle('hidden');
+                    });
+                });
+                transactionsContainer.querySelectorAll('.edit-btn, .delete-btn').forEach(btn => btn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    const id = e.currentTarget.dataset.id;
+                    const type = e.currentTarget.dataset.type;
+                    if(btn.classList.contains('edit-btn')) openModal(`edit-${type}-modal`, id);
+                    else openDeleteConfirmation(id, type);
+                }));
+                 lucide.createIcons();
+            }
+        }
+        
         function updateAccountingView() {
             const filterValue = document.getElementById('month-filter')?.value || '';
             let allPayments = Object.values(localData.payments).flat();
@@ -493,6 +540,20 @@
             const url = URL.createObjectURL(blob);
             link.setAttribute("href", url);
             link.setAttribute("download", `bilan_comptable_${filterValue || 'global'}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportTreasuryToCSV() {
+            let csvContent = "Type;Date;Catégorie;Montant (CFA)\n";
+            localData.personal_transactions.forEach(t => csvContent += `${t.type};${t.date};${t.category};${t.amount}\n`);
+            
+            const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `tresorerie_personnelle.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -590,11 +651,24 @@
             const tbody = document.getElementById('payments-table-body');
             if(!tbody) return;
             const payments = localData.payments[leaseId] || [];
-            tbody.innerHTML = payments.length === 0 ? `<tr><td colspan="4" class="text-center py-10 text-gray-500">Aucun paiement.</td></tr>` : payments.map(p => `<tr><td class="px-6 py-4">${new Date(p.period + '-02').toLocaleString('fr-FR', {month:'long', year:'numeric'})}</td><td class="px-6 py-4">${formatDate(p.paymentDate)}</td><td class="px-6 py-4">${formatCurrency(p.amount)}</td><td class="px-6 py-4"><button class="generate-receipt-btn text-accent-color hover:underline" data-payment-id="${p.id}" data-lease-id="${leaseId}"><i class="inline-block mr-1 h-4 w-4" data-lucide="receipt"></i> Quittance</button></td></tr>`).join('');
+            tbody.innerHTML = payments.length === 0 ? `<tr><td colspan="4" class="text-center py-10 text-gray-500">Aucun paiement.</td></tr>` : payments.map(p => `<tr data-id="${p.id}" data-lease-id="${leaseId}"><td class="px-6 py-4">${new Date(p.period + '-02').toLocaleString('fr-FR', {month:'long', year:'numeric'})}</td><td class="px-6 py-4">${formatDate(p.paymentDate)}</td><td class="px-6 py-4">${formatCurrency(p.amount)}</td><td class="px-6 py-4 text-right"><div class="flex items-center justify-end space-x-2"> <button class="generate-receipt-btn text-accent-color hover:underline" data-payment-id="${p.id}" data-lease-id="${leaseId}"><i class="inline-block mr-1 h-4 w-4" data-lucide="receipt"></i> Quittance</button> ${renderActionsMenu(p.id, 'payment')}</div></td></tr>`).join('');
+            
             tbody.querySelectorAll('.generate-receipt-btn').forEach(btn => btn.addEventListener('click', (e) => {
                 const { leaseId, paymentId } = e.currentTarget.dataset;
                 openModal('receipt-modal', { leaseId, paymentId });
             }));
+
+            tbody.querySelectorAll('.edit-btn, .delete-btn').forEach(btn => btn.addEventListener('click', e => {
+                e.stopPropagation();
+                const paymentId = e.currentTarget.dataset.id;
+                const type = e.currentTarget.dataset.type;
+                if(btn.classList.contains('edit-btn')) {
+                    openModal(`edit-${type}-modal`, { paymentId, leaseId });
+                } else {
+                    openDeleteConfirmation(paymentId, type, { leaseId });
+                }
+            }));
+
             lucide.createIcons();
         }
         
@@ -605,15 +679,15 @@
         });
 
         function renderActionsMenu(id, type) {
-            return `<td class="text-right px-6 py-4 relative">
+            return `<div class="relative inline-block text-left">
                 <button data-action-menu-button="${id}" class="text-gray-400 hover:text-accent-color"><i data-lucide="more-vertical" class="pointer-events-none"></i></button>
-                <div data-action-menu="${id}" class="absolute right-10 top-0 z-10 w-32 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden">
+                <div data-action-menu="${id}" class="origin-top-right absolute right-0 mt-2 w-32 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-10">
                     <div class="py-1" role="none">
                         <a href="#" class="edit-btn text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" data-id="${id}" data-type="${type}">Modifier</a>
                         <a href="#" class="delete-btn text-red-600 block px-4 py-2 text-sm hover:bg-gray-100" data-id="${id}" data-type="${type}">Supprimer</a>
                     </div>
                 </div>
-            </td>`;
+            </div>`;
         }
         
         function renderAllModals() {
@@ -635,6 +709,7 @@
 
             const paymentFormContent = `<input type="hidden" name="leaseId"><div class="grid grid-cols-2 gap-4"><div><label class="text-sm font-medium text-gray-700">Période</label><input name="period" type="month" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div><div><label class="text-sm font-medium text-gray-700">Montant (CFA)</label><input name="amount" type="number" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div></div><div><label class="text-sm font-medium text-gray-700">Date de paiement</label><input name="paymentDate" type="date" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div>`;
             const paymentForm = `<form id="add-payment-modal-form" class="p-6 space-y-4">${paymentFormContent}<div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('add-payment-modal')}</div></form>`;
+            const editPaymentForm = `<form id="edit-payment-modal-form" class="p-6 space-y-4"><input type="hidden" name="id"><input type="hidden" name="leaseId">${paymentFormContent}<div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('edit-payment-modal', true)}</div></form>`;
             
             const manageDepositForm = `<form id="manage-deposit-modal-form" class="p-6 space-y-4">
                 <input type="hidden" name="id">
@@ -644,6 +719,9 @@
                 <div><label class="text-sm font-medium">Notes (justification si retenue)</label><textarea name="depositNotes" rows="2" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></textarea></div>
                 <div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('manage-deposit-modal', true)}</div>
             </form>`;
+            
+            const transactionForm = `<form id="add-transaction-modal-form" class="p-6 space-y-4"><div class="grid grid-cols-2 gap-4"><div><label class="text-sm font-medium">Date</label><input name="date" type="date" required class="mt-1 block w-full border-gray-300 rounded-md"></div><div><label class="text-sm font-medium">Type</label><select name="type" class="mt-1 block w-full border-gray-300 rounded-md"><option value="income">Revenu</option><option value="expense">Dépense</option></select></div></div><div><label class="text-sm font-medium">Catégorie</label><input name="category" type="text" required class="mt-1 block w-full border-gray-300 rounded-md"></div><div><label class="text-sm font-medium">Montant (CFA)</label><input name="amount" type="number" required class="mt-1 block w-full border-gray-300 rounded-md"></div><div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('add-transaction-modal')}</div></form>`;
+            const editTransactionForm = `<form id="edit-transaction-modal-form" class="p-6 space-y-4"><input type="hidden" name="id"><div class="grid grid-cols-2 gap-4"><div><label class="text-sm font-medium">Date</label><input name="date" type="date" required class="mt-1 block w-full border-gray-300 rounded-md"></div><div><label class="text-sm font-medium">Type</label><select name="type" class="mt-1 block w-full border-gray-300 rounded-md"><option value="income">Revenu</option><option value="expense">Dépense</option></select></div></div><div><label class="text-sm font-medium">Catégorie</label><input name="category" type="text" required class="mt-1 block w-full border-gray-300 rounded-md"></div><div><label class="text-sm font-medium">Montant (CFA)</label><input name="amount" type="number" required class="mt-1 block w-full border-gray-300 rounded-md"></div><div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('edit-transaction-modal', true)}</div></form>`;
 
             dom.modalContainer.innerHTML = `
                 ${templates.modal('add-property-modal', 'Ajouter un Bien', propertyForm)}
@@ -655,8 +733,11 @@
                 ${templates.modal('add-expense-modal', 'Ajouter une Charge', expenseForm)}
                 ${templates.modal('edit-expense-modal', 'Modifier la Charge', editExpenseForm)}
                 ${templates.modal('add-payment-modal', 'Ajouter un Paiement', paymentForm)}
+                ${templates.modal('edit-payment-modal', 'Modifier un Paiement', editPaymentForm)}
                 ${templates.modal('manage-deposit-modal', 'Gérer le Dépôt de Garantie', manageDepositForm)}
                 ${templates.modal('receipt-modal', 'Quittance de Loyer', '', 'max-w-4xl')}
+                ${templates.modal('add-transaction-modal', 'Nouvelle Transaction Personnelle', transactionForm)}
+                ${templates.modal('edit-transaction-modal', 'Modifier la Transaction', editTransactionForm)}
                 ${templates.confirmDeleteModal('confirm-delete-modal', 'l\'élément')}
             `;
             setupModalControlsAndForms();
@@ -682,7 +763,13 @@
                     const lease = localData.leases.find(l => l.id === f.leaseId.value);
                     return { period: f.period.value, amount: f.amount.value, paymentDate: f.paymentDate.value, leaseId: f.leaseId.value, tenantName: lease.tenantName, propertyName: lease.propertyName };
                 }},
+                 'edit-payment': { collection: 'payments', data: f => {
+                    const lease = localData.leases.find(l => l.id === f.leaseId.value);
+                    return { period: f.period.value, amount: f.amount.value, paymentDate: f.paymentDate.value, leaseId: f.leaseId.value, tenantName: lease.tenantName, propertyName: lease.propertyName };
+                }, isUpdate: true},
                 'manage-deposit': { collection: 'leases', data: f => ({ depositStatus: f.depositStatus.value, depositReturnDate: f.depositReturnDate.value, depositAmountReturned: f.depositAmountReturned.value, depositNotes: f.depositNotes.value }), isUpdate: true },
+                'add-transaction': { collection: 'personal_transactions', data: f => ({ date: f.date.value, type: f.type.value, category: f.category.value, amount: f.amount.value }) },
+                'edit-transaction': { collection: 'personal_transactions', data: f => ({ date: f.date.value, type: f.type.value, category: f.category.value, amount: f.amount.value }), isUpdate: true },
             };
 
             for (const [formIdPrefix, config] of Object.entries(forms)) {
@@ -693,7 +780,11 @@
                         const data = config.data(e.target);
                         const modalId = `${formIdPrefix}-modal`;
                         if (config.isUpdate) {
-                            await handleUpdate(e.target.id.value, config.collection, data);
+                             if(config.collection === 'payments'){
+                                await handleUpdate(e.target.id.value, `leases/${e.target.leaseId.value}/payments`, data);
+                            } else {
+                                await handleUpdate(e.target.id.value, config.collection, data);
+                            }
                         } else if (config.collection === 'payments') {
                             await handleCreate(`leases/${e.target.leaseId.value}/payments`, data);
                         } else {
@@ -722,8 +813,17 @@
                 }
             } else if (modalId.startsWith('edit-') && context) {
                 const type = modalId.split('-')[1];
-                const collectionName = {property: 'properties', tenant: 'tenants', lease: 'leases', expense: 'expenses'}[type];
-                const item = localData[collectionName]?.find(d => d.id === context);
+                const collectionName = {property: 'properties', tenant: 'tenants', lease: 'leases', expense: 'expenses', personal_transaction: 'personal_transactions', payment: 'payments'}[type];
+                
+                let item;
+                if(type === 'payment'){
+                    const { leaseId, paymentId } = context;
+                    item = (localData.payments[leaseId] || []).find(p => p.id === paymentId);
+                    if(item) item.leaseId = leaseId;
+                } else {
+                    item = localData[collectionName]?.find(d => d.id === context);
+                }
+
                 if (item) {
                     form.id.value = item.id;
                     if(type === 'property') { form.nickname.value = item.nickname; form.address.value = item.address; form.type.value = item.type; form.status.value = item.status || 'Actif'; } 
@@ -739,6 +839,16 @@
                         form.amount.value = item.amount;
                         form.type.value = item.type;
                         form.description.value = item.description;
+                    } else if (type === 'personal_transaction') {
+                        form.date.value = item.date;
+                        form.type.value = item.type;
+                        form.category.value = item.category;
+                        form.amount.value = item.amount;
+                    } else if (type === 'payment') {
+                        form.leaseId.value = item.leaseId;
+                        form.period.value = item.period;
+                        form.amount.value = item.amount;
+                        form.paymentDate.value = item.paymentDate;
                     }
                 }
             } else if (modalId === 'manage-deposit-modal' && context) {
@@ -765,13 +875,17 @@
             lucide.createIcons();
         }
 
-        function openDeleteConfirmation(id, type) {
+        function openDeleteConfirmation(id, type, context) {
             const modal = document.getElementById('confirm-delete-modal');
             if(!modal) return;
             modal.classList.remove('hidden');
             lucide.createIcons();
             const confirmBtn = document.getElementById('confirm-delete-btn');
-            const collectionName = {property: 'properties', tenant: 'tenants', lease: 'leases', expense: 'expenses'}[type];
+            
+            let collectionName = {property: 'properties', tenant: 'tenants', lease: 'leases', expense: 'expenses', personal_transaction: 'personal_transactions'}[type];
+            if(type === 'payment') {
+                collectionName = `leases/${context.leaseId}/payments`;
+            }
             
             const newConfirmBtn = confirmBtn.cloneNode(true);
             confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
@@ -794,7 +908,7 @@
         
         function listenToFirestore() {
             unsubscribeAll();
-            const collectionsToListen = ['properties', 'tenants', 'leases', 'expenses'];
+            const collectionsToListen = ['properties', 'tenants', 'leases', 'expenses', 'personal_transactions'];
             collectionsToListen.forEach(name => {
                 const path = `users/${userId}/${name}`;
                 const q = query(collection(db, path));
