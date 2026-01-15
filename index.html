@@ -1,1015 +1,666 @@
 <!DOCTYPE html>
-<html lang="fr" class="h-full">
+<html lang="fr" class="h-full bg-slate-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G-IMMO | Gestion Locative</title>
+    <title>G-IMMO | Gestion Complète CI (Finale)</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --sidebar-width: 260px;
-            --background: #f8fafc;
-            --sidebar-bg: #111827;
-            --card-bg: #ffffff;
-            --text-primary: #1f2937;
-            --text-secondary: #6b7280;
-            --border-color: #e5e7eb;
-            --accent-color: #3b82f6;
-            --accent-color-dark: #2563eb;
+    <!-- JSZip & FileSaver -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" xintegrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwWWfokGNhBNlE8lTxlGYTqBvnyfK750q1re5pt+vwDDi4PB0pvX66HomspQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" xintegrity="sha512-Qwa0tco3Ka6BnL+SYwKuT99sdXgHGk0PSRiHJrD64OzsXQo4e1PSP65le5zX48u7y/0wvGxs7y/k7v/Q2bo++A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 900: '#0c4a6e' },
+                        sidebar: '#0f172a'
+                    }
+                }
+            }
         }
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--background);
-            color: var(--text-primary);
-        }
-        .sidebar { width: var(--sidebar-width); background-color: var(--sidebar-bg); border-right: 1px solid var(--border-color); }
-        .sidebar-link { color: #d1d5db; }
-        .sidebar-link:hover { background-color: #1f2937; color: #ffffff; }
-        .sidebar-link.active { background-color: var(--accent-color); color: #ffffff; font-weight: 600; }
-        .btn { @apply inline-flex items-center justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200; }
-        .btn-primary { 
-            background-color: var(--accent-color); 
-            color: white;
-            box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06);
-        }
-        .btn-primary:hover { 
-            background-color: var(--accent-color-dark);
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-            transform: translateY(-1px);
-        }
-        .btn-danger { 
-            background-color: #ef4444; 
-            color: white;
-            box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px 0 rgba(0,0,0,0.06);
-        }
-        .btn-danger:hover { 
-            background-color: #dc2626;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-            transform: translateY(-1px);
-        }
-        .btn-secondary { @apply text-gray-700 bg-gray-100 hover:bg-gray-200 focus:ring-gray-500; }
-        .card { background-color: var(--card-bg); border-radius: 0.75rem; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05); }
-        .status-badge { @apply px-2.5 py-0.5 text-xs font-medium rounded-full; }
-        .status-paid { @apply bg-green-100 text-green-800; }
-        .status-pending { @apply bg-yellow-100 text-yellow-800; }
-        .status-late { @apply bg-red-100 text-red-800; }
-        .status-refunded { @apply bg-blue-100 text-blue-800; }
-        .status-inactive { @apply bg-gray-100 text-gray-800; }
-        
+    </script>
+    <!-- CORRECTION ICI: Ajout de type="text/tailwindcss" pour supporter @apply -->
+    <style type="text/tailwindcss">
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         @media print {
-            body * { visibility: hidden; }
-            #printable-report, #printable-report *, #receipt-content, #receipt-content * { visibility: visible; }
-            #printable-report, #receipt-content { position: absolute; left: 0; top: 0; width: 100%; padding: 2rem; }
-            .no-print { display: none; }
+            .no-print { display: none !important; }
+            body { background: white; }
         }
+        .card { @apply bg-white rounded-xl border border-slate-200 shadow-sm transition-all duration-200; }
+        .card:hover { @apply shadow-md border-slate-300; }
+        .input-clean { @apply w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 transition-colors; }
+        .btn-brand { @apply text-white bg-brand-600 hover:bg-brand-700 font-medium rounded-lg text-sm px-4 py-2 text-center inline-flex items-center gap-2 transition-colors shadow-sm; }
     </style>
 </head>
-<body class="h-full antialiased">
+<body class="h-full text-slate-800 antialiased overflow-hidden selection:bg-brand-100">
 
-    <!-- Auth Screen -->
-    <div id="auth-screen" class="hidden h-full flex items-center justify-center bg-gray-50">
-        <div class="w-full max-w-md">
-            <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold tracking-wider text-gray-800">G-IMMO</h1>
-                <p class="text-gray-500 mt-2">Connectez-vous pour gérer vos biens</p>
-            </div>
-            <div class="card p-8">
-                <form id="login-form" class="space-y-6">
-                    <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700">Adresse e-mail</label>
-                        <input type="email" name="email" id="email" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
-                    </div>
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700">Mot de passe</label>
-                        <input type="password" name="password" id="password" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3">
-                    </div>
-                    <p id="auth-error" class="text-sm text-red-600 hidden"></p>
-                    <div>
-                        <button type="submit" class="w-full btn btn-primary">Se connecter</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    <!-- Notifications -->
+    <div id="toast-container" class="fixed top-5 right-5 z-[60] flex flex-col gap-2 pointer-events-none"></div>
 
-    <!-- App Screen -->
-    <div id="app-screen" class="hidden h-full">
-        <div class="flex h-full">
-            <!-- Sidebar -->
-            <aside class="sidebar flex-shrink-0 flex flex-col no-print">
-                <div class="h-16 flex items-center justify-center border-b border-gray-700">
-                    <h1 class="text-2xl font-bold tracking-wider text-white">G-IMMO</h1>
-                </div>
-                <nav class="flex-1 p-4 space-y-1">
-                    <a href="#" id="nav-dashboard" class="sidebar-link flex items-center px-3 py-2.5 rounded-md text-sm"><i data-lucide="layout-dashboard" class="mr-3 h-5 w-5"></i> Dashboard</a>
-                    <p class="px-3 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Gestion</p>
-                    <a href="#" id="nav-properties" class="sidebar-link flex items-center px-3 py-2.5 rounded-md text-sm"><i data-lucide="home" class="mr-3 h-5 w-5"></i> Biens</a>
-                    <a href="#" id="nav-tenants" class="sidebar-link flex items-center px-3 py-2.5 rounded-md text-sm"><i data-lucide="users" class="mr-3 h-5 w-5"></i> Locataires</a>
-                    <a href="#" id="nav-leases" class="sidebar-link flex items-center px-3 py-2.5 rounded-md text-sm"><i data-lucide="file-text" class="mr-3 h-5 w-5"></i> Baux</a>
-                    <p class="px-3 pt-4 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Finances</p>
-                    <a href="#" id="nav-accounting" class="sidebar-link flex items-center px-3 py-2.5 rounded-md text-sm"><i data-lucide="trending-up" class="mr-3 h-5 w-5"></i> Comptabilité</a>
-                    <a href="#" id="nav-treasury" class="sidebar-link flex items-center px-3 py-2.5 rounded-md text-sm"><i data-lucide="piggy-bank" class="mr-3 h-5 w-5"></i> Trésorerie</a>
-                </nav>
-                <div class="p-4 border-t border-gray-700">
-                     <a href="#" id="nav-profile" class="sidebar-link flex items-center px-3 py-2.5 rounded-md text-sm mb-2"><i data-lucide="user" class="mr-3 h-5 w-5"></i> Mon Profil</a>
-                     <a href="#" id="logout-btn" class="sidebar-link flex items-center px-3 py-2.5 rounded-md text-sm text-red-400 hover:bg-red-500 hover:text-white"><i data-lucide="log-out" class="mr-3 h-5 w-5"></i> Déconnexion</a>
-                </div>
-            </aside>
-
-            <!-- Main Content -->
-            <main id="main-content" class="flex-1 flex flex-col"></main>
-        </div>
-    </div>
-
-    <!-- Modals -->
-    <div id="modal-container"></div>
-    <div id="printable-report-container" class="hidden"></div>
-    
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, onSnapshot, doc, getDoc, setDoc, orderBy, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        const firebaseConfig = { apiKey: "AIzaSyBj3jcQpgvfbTS3tM6WkPcfF2gKhYeS2-U", authDomain: "location-85222.firebaseapp.com", projectId: "location-85222", storageBucket: "location-85222.firebasestorage.app", messagingSenderId: "297096227425", appId: "1:297096227425:web:25d0f8c49c313e82269820" };
+    <!-- App Container -->
+    <div id="app-screen" class="flex h-full flex-col md:flex-row">
         
-        let auth, db, userId, unsubscribeListeners = [];
-        const localData = { profile: {}, properties: [], tenants: [], leases: [], payments: {}, expenses: [], personal_transactions: [] };
-        let currentView = null;
+        <!-- Sidebar -->
+        <aside id="sidebar" class="bg-sidebar w-full md:w-64 flex-shrink-0 flex flex-col border-r border-slate-800 transition-all duration-300 hidden md:flex no-print h-full z-40 relative">
+            <div class="h-16 flex items-center px-6 bg-slate-900 border-b border-slate-800">
+                <i data-lucide="building-2" class="text-brand-500 mr-3 h-6 w-6"></i>
+                <div>
+                    <h1 class="text-lg font-bold tracking-wide text-white">G-IMMO</h1>
+                    <span class="text-[10px] text-orange-400 font-mono uppercase tracking-wider">Édition CI</span>
+                </div>
+            </div>
 
-        const dom = { 
-            main: document.getElementById('main-content'), 
-            modalContainer: document.getElementById('modal-container'),
-            authScreen: document.getElementById('auth-screen'),
-            appScreen: document.getElementById('app-screen'),
-            loginForm: document.getElementById('login-form'),
-            authError: document.getElementById('auth-error'),
+            <!-- Recherche Globale -->
+            <div class="px-4 py-4 border-b border-slate-800">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-500"></i>
+                    </div>
+                    <input type="text" id="global-search" placeholder="Chercher un client..." class="bg-slate-800 border border-slate-700 text-slate-300 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block w-full pl-10 p-2 placeholder-slate-500">
+                </div>
+                <div id="search-results" class="absolute left-4 right-4 mt-1 bg-white rounded-lg shadow-xl z-50 hidden max-h-60 overflow-y-auto border border-slate-200"></div>
+            </div>
+
+            <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+                <a href="#" data-view="dashboard" class="nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                    <i data-lucide="layout-dashboard" class="mr-3 h-5 w-5 opacity-70"></i> Tableau de bord
+                </a>
+
+                <div class="mt-6 mb-2 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Gestion</div>
+                <a href="#" data-view="properties" class="nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                    <i data-lucide="home" class="mr-3 h-5 w-5 opacity-70"></i> Biens
+                </a>
+                <a href="#" data-view="tenants" class="nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                    <i data-lucide="users" class="mr-3 h-5 w-5 opacity-70"></i> Locataires
+                </a>
+                <a href="#" data-view="leases" class="nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                    <i data-lucide="file-contract" class="mr-3 h-5 w-5 opacity-70"></i> Baux & Contrats
+                </a>
+
+                <div class="mt-6 mb-2 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Comptabilité</div>
+                <a href="#" data-view="finance" class="nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                    <i data-lucide="banknote" class="mr-3 h-5 w-5 opacity-70"></i> Transactions
+                </a>
+                <a href="#" data-view="reports" class="nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                    <i data-lucide="file-spreadsheet" class="mr-3 h-5 w-5 opacity-70"></i> Bilans & Exports
+                </a>
+
+                <div class="mt-6 mb-2 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Système</div>
+                <a href="#" data-view="settings" class="nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                    <i data-lucide="database-backup" class="mr-3 h-5 w-5 opacity-70"></i> Sauvegardes
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main id="main-content" class="flex-1 flex flex-col h-full overflow-hidden bg-slate-50 relative">
+            <div class="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center no-print shadow-md z-30">
+                <span class="font-bold text-lg">G-IMMO CI</span>
+                <button id="mobile-menu-btn" class="p-2 text-slate-300 hover:text-white"><i data-lucide="menu"></i></button>
+            </div>
+            
+            <div id="view-container" class="flex-1 overflow-hidden relative"></div>
+        </main>
+    </div>
+
+    <!-- Global Modal -->
+    <div id="modal-backdrop" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-opacity no-print">
+        <div id="modal-content" class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all scale-100 max-h-[90vh] overflow-y-auto border border-slate-200"></div>
+    </div>
+
+    <!-- Loader Overlay -->
+    <div id="loader" class="fixed inset-0 bg-white/80 z-[70] hidden flex flex-col items-center justify-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600"></div>
+        <p class="mt-4 text-slate-600 font-medium" id="loader-text">Traitement...</p>
+    </div>
+
+    <script>
+        // --- 1. MOTEUR DE BASE DE DONNÉES ---
+        
+        const DB_NAME = 'GImmoCIDB';
+        const DB_VERSION = 1;
+        const STORE_FILES = 'files';
+
+        const dbEngine = {
+            init: () => new Promise((resolve, reject) => {
+                const req = indexedDB.open(DB_NAME, DB_VERSION);
+                req.onupgradeneeded = e => { if (!e.target.result.objectStoreNames.contains(STORE_FILES)) e.target.result.createObjectStore(STORE_FILES, { keyPath: 'id' }); };
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            }),
+            saveFile: async (fileObj) => {
+                const db = await dbEngine.init();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction([STORE_FILES], 'readwrite');
+                    const record = { id: crypto.randomUUID(), name: fileObj.name, type: fileObj.type, blob: fileObj, date: new Date().toISOString() };
+                    tx.objectStore(STORE_FILES).add(record).onsuccess = () => resolve(record.id);
+                    tx.onerror = () => reject(tx.error);
+                });
+            },
+            saveRestoredFile: async (fileRecord) => {
+                const db = await dbEngine.init();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction([STORE_FILES], 'readwrite');
+                    tx.objectStore(STORE_FILES).put(fileRecord).onsuccess = () => resolve();
+                    tx.onerror = () => reject(tx.error);
+                });
+            },
+            getFile: async (id) => {
+                const db = await dbEngine.init();
+                return new Promise((resolve) => {
+                    db.transaction([STORE_FILES], 'readonly').objectStore(STORE_FILES).get(id).onsuccess = (e) => resolve(e.target.result);
+                });
+            },
+            getAllFiles: async () => {
+                const db = await dbEngine.init();
+                return new Promise(resolve => {
+                    db.transaction([STORE_FILES], 'readonly').objectStore(STORE_FILES).getAll().onsuccess = e => resolve(e.target.result);
+                });
+            },
+            clearFiles: async () => {
+                const db = await dbEngine.init();
+                return new Promise(resolve => {
+                    db.transaction([STORE_FILES], 'readwrite').objectStore(STORE_FILES).clear().onsuccess = () => resolve();
+                });
+            }
         };
+
+        // --- 2. STORE ---
+
+        const initialState = {
+            properties: [],
+            tenants: [],
+            leases: [],
+            payments: [],
+            expenses: [],
+            logs: [],
+            profile: { fullname: 'Mon Agence Immobilière', currency: 'FCFA' }
+        };
+
+        const store = {
+            data: { ...initialState },
+            load: () => {
+                const stored = localStorage.getItem('g_immo_ci_v2_data');
+                if (stored) {
+                    try {
+                        const parsed = JSON.parse(stored);
+                        if(parsed && typeof parsed === 'object') store.data = { ...initialState, ...parsed };
+                    } catch(e) { console.error("Données locales corrompues"); }
+                }
+            },
+            save: () => {
+                if(store.data.logs.length > 500) {
+                    store.data.logs = store.data.logs.slice(0, 500);
+                }
+                try {
+                    localStorage.setItem('g_immo_ci_v2_data', JSON.stringify(store.data));
+                } catch(e) {
+                    alert("Espace disque saturé. Impossible de sauvegarder.");
+                }
+            },
+            log: (action, details, category = 'info') => {
+                store.data.logs.unshift({ id: crypto.randomUUID(), date: new Date().toISOString(), action, details, category });
+                store.save();
+            },
+            add: (col, item) => { item.id = crypto.randomUUID(); item.createdAt = new Date().toISOString(); store.data[col].push(item); store.save(); return item; },
+            update: (col, id, updates) => { const i = store.data[col].findIndex(x => x.id === id); if(i>-1) { store.data[col][i] = {...store.data[col][i], ...updates}; store.save(); return true; } return false; },
+            delete: (col, id) => { store.data[col] = store.data[col].filter(x => x.id !== id); store.save(); },
+            get: (col, id) => store.data[col].find(x => x.id === id)
+        };
+
+        // --- 3. UTILS ---
+
+        const formatCurrency = (n) => new Intl.NumberFormat('fr-FR').format(n || 0) + ' FCFA';
+        const formatDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '-';
+        const escapeHtml = (s) => (s || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         
-        const formatCurrency = (value) => {
-            const number = parseFloat(value) || 0;
-            return new Intl.NumberFormat('fr-FR').format(number) + ' CFA';
-        }
+        const loader = {
+            show: (txt = 'Chargement...') => { document.getElementById('loader-text').innerText = txt; document.getElementById('loader').classList.remove('hidden'); },
+            hide: () => document.getElementById('loader').classList.add('hidden')
+        };
 
-        const formatDate = (dateString) => new Date(dateString).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const showToast = (msg, type = 'success') => {
+            const c = document.getElementById('toast-container');
+            const d = document.createElement('div');
+            d.className = `${type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'} text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-3 transform transition-all duration-300 translate-x-full max-w-sm pointer-events-auto`;
+            d.innerHTML = `<i data-lucide="${type === 'success' ? 'check-circle' : 'alert-octagon'}" class="w-5 h-5"></i><span class="font-medium text-sm">${msg}</span>`;
+            c.appendChild(d);
+            lucide.createIcons();
+            requestAnimationFrame(() => d.classList.remove('translate-x-full'));
+            setTimeout(() => { d.classList.add('translate-x-full', 'opacity-0'); setTimeout(() => d.remove(), 300); }, 3000);
+        };
 
-        const templates = {
-            header: (title, button) => `<header class="h-16 bg-white/70 backdrop-blur-sm border-b border-border-color flex items-center justify-between px-6 flex-shrink-0 no-print"><h2 class="text-xl font-semibold text-text-primary">${title}</h2><div>${button || ''}</div></header>`,
-            contentArea: (content) => `<div class="flex-1 overflow-y-auto p-6">${content}</div>`,
-            createButton: (icon, text, id, type = 'primary') => `<button id="${id}" class="btn ${type === 'danger' ? 'btn-danger' : 'btn-primary'}"><i data-lucide="${icon}" class="mr-2 h-4 w-4"></i> ${text}</button>`,
-            modal: (id, title, form, size = 'max-w-lg') => `<div id="${id}" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-300 hidden no-print"><div class="card w-full ${size}"><div class="p-6 border-b border-border-color flex justify-between items-center"><h3 class="text-lg font-semibold">${title}</h3><button data-close-modal="${id}" class="text-gray-400 hover:text-gray-800"><i data-lucide="x"></i></button></div><div id="${id}-content">${form}</div></div></div>`,
-            formButtons: (modalId, isEdit = false) => `<div class="flex justify-end space-x-3"><button type="button" data-close-modal="${modalId}" class="btn btn-secondary">Annuler</button><button type="submit" class="btn btn-primary">${isEdit ? 'Mettre à jour' : 'Enregistrer'}</button></div>`,
-            statCard: (title, value, icon, color = 'blue') => `<div class="card p-5 flex items-center"><div class="bg-${color}-100 text-${color}-500 rounded-lg p-3 mr-4"><i data-lucide="${icon}"></i></div><div><p class="text-sm font-medium text-text-secondary">${title}</p><p class="text-2xl font-bold text-text-primary mt-1">${value}</p></div></div>`,
-            confirmDeleteModal: (id, itemType) => templates.modal(id, `Supprimer ${itemType}`, `<div class="p-6"><p>Êtes-vous sûr de vouloir supprimer cet élément ? Cette action est irréversible.</p></div><div class="p-6 bg-gray-50 rounded-b-lg flex justify-end space-x-3"><button type="button" data-close-modal="${id}" class="btn btn-secondary">Annuler</button><button id="confirm-delete-btn" class="btn btn-danger">Supprimer</button></div>`),
-            leaseDetailView: (lease) => {
-                const depositStatusBadge = {
-                    'Reçu': 'status-paid',
-                    'Remboursé': 'status-refunded',
-                    'Partiellement retenu': 'status-pending'
-                };
-                const depositBadge = depositStatusBadge[lease.depositStatus] || 'bg-gray-100 text-gray-800';
+        const getPaymentStatus = (lease, periodStr) => {
+            const payments = store.data.payments.filter(p => p.leaseId === lease.id && p.period === periodStr);
+            const totalPaid = payments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+            
+            const [y, m] = periodStr.split('-');
+            const limitDate = new Date(parseInt(y), parseInt(m) - 1, 10, 23, 59, 59);
+            const now = new Date();
 
+            if (totalPaid >= parseFloat(lease.rentAmount)) return { label: 'Payé', color: 'bg-emerald-100 text-emerald-800' };
+            if (totalPaid > 0) return { label: 'Partiel', color: 'bg-amber-100 text-amber-800' };
+            if (now > limitDate) return { label: 'En retard', color: 'bg-rose-100 text-rose-800' };
+            return { label: 'En attente', color: 'bg-slate-100 text-slate-600' };
+        };
+
+        // --- 4. VUES ---
+
+        const router = {
+            current: 'dashboard',
+            params: {},
+            navigate: (view, params = {}) => {
+                router.current = view;
+                router.params = params;
+                render();
+            }
+        };
+
+        const components = {
+            header: (title, subtitle, action = '') => `
+                <header class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 sticky top-0 z-20 shadow-sm no-print">
+                    <div><h2 class="text-xl font-bold text-slate-800">${title}</h2>${subtitle ? `<p class="text-xs text-slate-500 mt-0.5">${subtitle}</p>` : ''}</div>
+                    <div class="flex gap-2">${action}</div>
+                </header>
+            `,
+            statusBadge: (status, type='lease') => {
+                if(type === 'lease') {
+                    if(status === 'active') return `<span class="px-2 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">Actif</span>`;
+                    if(status === 'archived') return `<span class="px-2 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500">Clôturé</span>`;
+                }
+                return `<span>${status}</span>`;
+            }
+        };
+
+        const views = {
+            dashboard: () => { 
+                const activeLeases = store.data.leases.filter(l => l.status === 'active');
+                const income = store.data.payments.reduce((s, p) => s + parseFloat(p.amount), 0);
                 return `
-                ${templates.header(`Bail: ${lease.propertyName}`, `<button id="back-to-leases" class="btn btn-secondary"><i data-lucide="arrow-left" class="mr-2 h-4 w-4"></i> Retour</button>`)}
-                <div class="flex-1 overflow-y-auto p-6">
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="lg:col-span-2 card">
-                            <div class="p-5 border-b border-border-color flex justify-between items-center"><h3 class="font-semibold text-lg">Suivi des Paiements</h3>${templates.createButton('plus', 'Ajouter un paiement', 'add-payment-btn')}</div>
-                            <div class="table-wrapper border-0 rounded-b-lg"><table class="w-full text-sm"><thead><tr class="bg-gray-50"><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Période</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Paiement</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th><th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th></tr></thead><tbody id="payments-table-body"></tbody></table></div>
+                    ${components.header('Tableau de Bord', 'Aperçu global de l\'activité')}
+                    <div class="p-6 overflow-y-auto h-full pb-24">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                             <div class="card p-5 border-l-4 border-l-brand-500"><p class="text-slate-500 text-xs font-bold uppercase">Biens Gérés</p><p class="text-2xl font-bold text-slate-800 mt-1">${store.data.properties.length}</p></div>
+                             <div class="card p-5 border-l-4 border-l-emerald-500"><p class="text-slate-500 text-xs font-bold uppercase">Baux Actifs</p><p class="text-2xl font-bold text-slate-800 mt-1">${activeLeases.length}</p></div>
+                             <div class="card p-5 border-l-4 border-l-indigo-500"><p class="text-slate-500 text-xs font-bold uppercase">Cautions Détenues</p><p class="text-2xl font-bold text-slate-800 mt-1">${formatCurrency(activeLeases.reduce((s,l)=>s+parseFloat(l.depositAmount||0),0))}</p></div>
+                             <div class="card p-5 border-l-4 border-l-rose-500"><p class="text-slate-500 text-xs font-bold uppercase">Revenus</p><p class="text-2xl font-bold text-slate-800 mt-1">${formatCurrency(income)}</p></div>
                         </div>
-                        <div class="lg:col-span-1 space-y-6">
-                            <div class="card p-6"><h3 class="font-semibold text-lg mb-4">Détails du Bail</h3><div class="space-y-3 text-sm text-text-secondary"><p class="flex justify-between"><strong>Locataire:</strong> <span class="text-right text-text-primary">${lease.tenantName}</span></p><p class="flex justify-between"><strong>Bien:</strong> <span class="text-right text-text-primary">${lease.propertyName}</span></p><p class="flex justify-between"><strong>Loyer:</strong> <span class="font-semibold text-right text-text-primary">${formatCurrency(lease.rentAmount)}</span></p><p class="flex justify-between"><strong>Début:</strong> <span class="text-right text-text-primary">${formatDate(lease.startDate)}</span></p></div></div>
-                            <div class="card p-6"><h3 class="font-semibold text-lg mb-4">Dépôt de Garantie</h3>
-                                <div class="space-y-3 text-sm">
-                                    <p class="flex justify-between"><strong>Montant:</strong> <span class="font-semibold text-right text-text-primary">${formatCurrency(lease.depositAmount)}</span></p>
-                                    <p class="flex justify-between items-center"><strong>Statut:</strong> <span class="status-badge ${depositBadge}">${lease.depositStatus || 'N/A'}</span></p>
-                                    ${lease.depositReturnDate ? `<p class="flex justify-between"><strong>Restitué le:</strong> <span class="text-right text-text-primary">${formatDate(lease.depositReturnDate)}</span></p>` : ''}
-                                    ${lease.depositAmountReturned ? `<p class="flex justify-between"><strong>Montant restitué:</strong> <span class="text-right text-text-primary">${formatCurrency(lease.depositAmountReturned)}</span></p>` : ''}
-                                </div>
-                                <button id="manage-deposit-btn" class="w-full btn btn-secondary mt-4">Gérer la restitution</button>
+                        <div class="card p-5 bg-gradient-to-br from-brand-900 to-slate-900 text-white">
+                            <h3 class="font-bold mb-2">Actions Rapides</h3>
+                            <div class="grid grid-cols-2 gap-3">
+                                <button onclick="actions.openAddPayment()" class="bg-white/10 hover:bg-white/20 p-3 rounded-lg text-left transition"><i data-lucide="plus-circle" class="mb-2 w-5 h-5 text-emerald-400"></i><br>Encaisser Loyer</button>
+                                <button onclick="actions.openCreateLease()" class="bg-white/10 hover:bg-white/20 p-3 rounded-lg text-left transition"><i data-lucide="file-plus" class="mb-2 w-5 h-5 text-blue-400"></i><br>Nouveau Bail</button>
                             </div>
                         </div>
-                    </div>
-                </div>`
+                    </div>`;
             },
-            propertyDetailView: (property) => {
-                const activeLease = localData.leases.find(l => l.propertyId === property.id);
-                const propertyExpenses = localData.expenses.filter(e => e.propertyId === property.id);
-                const propertyRevenues = Object.values(localData.payments).flat().filter(p => {
-                    const lease = localData.leases.find(l => l.id === p.leaseId);
-                    return lease && lease.propertyId === property.id;
-                });
-                const totalRevenues = propertyRevenues.reduce((sum, p) => sum + parseFloat(p.amount), 0);
-                const totalExpenses = propertyExpenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
-                const netBalance = totalRevenues - totalExpenses;
-
-                return `
-                ${templates.header(`Bien: ${property.nickname}`, `<button id="back-to-properties" class="btn btn-secondary"><i data-lucide="arrow-left" class="mr-2 h-4 w-4"></i> Retour</button>`)}
-                <div class="flex-1 overflow-y-auto p-6">
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                         <div class="card p-6">
-                            <h3 class="font-semibold text-lg mb-4">Statut d'Occupation</h3>
-                            ${activeLease ? `
-                                <div class="flex items-center text-green-600"><i data-lucide="check-circle" class="h-10 w-10 mr-4"></i><div><p class="font-bold text-xl">Loué</p><p>par ${activeLease.tenantName}</p></div></div>
-                            ` : `
-                                <div class="flex items-center text-gray-500"><i data-lucide="x-circle" class="h-10 w-10 mr-4"></i><div><p class="font-bold text-xl">Disponible</p></div></div>
-                            `}
+            properties: () => { 
+                return `${components.header('Biens', 'Parc Immobilier', `<button onclick="actions.openCreateProperty()" class="btn-brand">Ajouter</button>`)}
+                <div class="p-6 overflow-y-auto h-full pb-24 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    ${store.data.properties.map(p => `
+                    <div class="card p-5">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="bg-slate-100 text-slate-600 text-[10px] uppercase font-bold px-2 py-1 rounded tracking-wide">${escapeHtml(p.type)}</span>
+                            <button onclick="actions.deleteItem('properties','${p.id}','Bien')" class="text-rose-500 hover:text-rose-700"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                         </div>
-                        <div class="card p-6 lg:col-span-2">
-                             <h3 class="font-semibold text-lg mb-4">Bilan Financier du Bien</h3>
-                             <div class="grid grid-cols-3 gap-4">
-                                ${templates.statCard('Revenus Totals', formatCurrency(totalRevenues), 'arrow-up', 'green')}
-                                ${templates.statCard('Charges Totales', formatCurrency(totalExpenses), 'arrow-down', 'red')}
-                                ${templates.statCard('Solde Net', formatCurrency(netBalance), 'scale')}
-                             </div>
+                        <h3 class="font-bold text-lg">${escapeHtml(p.nickname)}</h3>
+                        <p class="text-sm text-slate-500 flex items-center gap-1 mt-1"><i data-lucide="map-pin" class="w-3 h-3"></i> ${escapeHtml(p.address)}</p>
+                    </div>`).join('')}
+                </div>`; 
+            },
+            tenants: () => { 
+                return `${components.header('Locataires', 'Répertoire Clients', `<button onclick="actions.openCreateTenant()" class="btn-brand">Ajouter</button>`)}
+                <div class="p-6 overflow-y-auto h-full pb-24 space-y-2">
+                    ${store.data.tenants.map(t => `
+                    <div class="card p-4 flex justify-between cursor-pointer hover:bg-slate-50" onclick="router.navigate('tenantDetail', {id: '${t.id}'})">
+                        <div>
+                            <p class="font-bold">${escapeHtml(t.lastname)} ${escapeHtml(t.firstname)}</p>
+                            <p class="text-xs text-slate-500">${escapeHtml(t.phone)}</p>
                         </div>
+                        <i data-lucide="chevron-right" class="text-slate-400"></i>
+                    </div>`).join('')}
+                </div>`; 
+            },
+            tenantDetail: () => { 
+                const t = store.get('tenants', router.params.id);
+                if (!t) return views.tenants();
+                const leases = store.data.leases.filter(l => l.tenantId === t.id);
+                const activeLease = leases.find(l => l.status === 'active');
+                
+                return `${components.header(t.lastname, 'Fiche client complète', `<button onclick="router.navigate('tenants')" class="text-sm border px-3 py-1 rounded bg-white">Retour</button>`)}
+                <div class="p-6 overflow-y-auto h-full pb-24 space-y-6">
+                    <div class="card p-6 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-900">${t.firstname} ${t.lastname}</h3>
+                            <p class="text-slate-500">${t.phone}</p>
+                        </div>
+                        ${activeLease ? 
+                            `<button onclick="actions.closeLease('${activeLease.id}')" class="text-rose-600 border border-rose-200 hover:bg-rose-50 px-3 py-1.5 rounded text-sm flex gap-2"><i data-lucide="user-x" class="w-4 h-4"></i> Signaler Départ</button>` 
+                            : '<span class="text-slate-400 text-sm">Aucun bail actif</span>'}
                     </div>
-                    <div class="mt-6 card">
-                        <div class="p-5 border-b"><h3 class="font-semibold text-lg">Historique des Charges</h3></div>
-                        <table class="w-full text-sm">
-                            <thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th></tr></thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                ${propertyExpenses.length > 0 ? propertyExpenses.map(e => `<tr><td class="px-6 py-4">${formatDate(e.date)}</td><td class="px-6 py-4">${e.type}</td><td class="px-6 py-4">${formatCurrency(e.amount)}</td></tr>`).join('') : `<tr><td colspan="3" class="text-center py-10 text-gray-500">Aucune charge enregistrée.</td></tr>`}
-                            </tbody>
-                        </table>
+                    
+                    <div>
+                        <h4 class="font-bold text-slate-500 text-sm uppercase mb-2">Historique des Baux</h4>
+                        ${leases.map(l => views.renderLeaseCard(l, l.status === 'active')).join('')}
                     </div>
                 </div>`;
             },
-            receipt: (lease, payment) => {
-                const property = localData.properties.find(p => p.id === lease.propertyId);
-                const tenant = localData.tenants.find(t => t.id === lease.tenantId);
-                const bailleur = localData.profile;
-                return `
-                <div id="receipt-content" class="p-8 font-serif text-gray-800">
-                    <div class="text-center mb-8"><h1 class="text-3xl font-bold">QUITTANCE DE LOYER</h1><p class="text-lg">Période du ${new Date(payment.period + '-02').toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}</p></div>
-                    <div class="grid grid-cols-2 gap-8 mb-8">
-                        <div><h2 class="font-bold border-b pb-1 mb-2">Bailleur</h2><p><strong>${bailleur.fullname || '[VOTRE NOM]'}</strong></p><p>${bailleur.address || '[Votre Adresse]'}</p><p>${bailleur.city || '[Ville, Code Postal]'}</p></div>
-                        <div><h2 class="font-bold border-b pb-1 mb-2">Locataire</h2><p><strong>${tenant.fullname}</strong></p><p>Pour le bien : <strong>${lease.propertyName}</strong></p><p>${property.address}</p></div>
+            renderLeaseCard: (lease, isActive) => {
+                const prop = store.get('properties', lease.propertyId);
+                const payments = store.data.payments.filter(p => p.leaseId === lease.id).sort((a,b) => b.date.localeCompare(a.date));
+                return `<div class="card p-4 mb-4 ${isActive?'border-brand-500 ring-1 ring-brand-100': 'opacity-75 bg-slate-50'}">
+                    <div class="flex justify-between mb-2">
+                        <p class="font-bold text-lg">${prop?.nickname}</p>
+                        ${components.statusBadge(lease.status)}
                     </div>
-                    <p class="mb-6">Je soussigné(e), propriétaire du logement désigné ci-dessus, déclare avoir reçu de ${tenant.fullname} la somme de <strong>${formatCurrency(payment.amount)}</strong>, pour le paiement du loyer.</p>
-                    <table class="w-full mb-8 border-collapse">
-                        <thead><tr class="bg-gray-100"><th class="border p-2 text-left">Désignation</th><th class="border p-2 text-right">Montant</th></tr></thead>
-                        <tbody><tr><td class="border p-2">Loyer</td><td class="border p-2 text-right">${formatCurrency(payment.amount)}</td></tr></tbody>
-                    </table>
-                    <div class="grid grid-cols-2 items-end mt-16"><p>Fait à ${bailleur.city || '[Votre Ville]'}, le ${formatDate(new Date())}</p><p class="text-right font-semibold">[Signature du Bailleur]</p></div>
-                </div>`
+                    <div class="flex gap-4 text-sm mb-4">
+                        <span>Loyer: <strong>${formatCurrency(lease.rentAmount)}</strong></span>
+                        <span>Caution: <strong>${formatCurrency(lease.depositAmount)}</strong></span>
+                    </div>
+                    ${lease.contractFileId ? `<button onclick="actions.viewFile('${lease.contractFileId}')" class="text-xs text-brand-600 mb-4 flex gap-1"><i data-lucide="file-text" class="w-3 h-3"></i> Voir Contrat PDF</button>` : ''}
+                    
+                    <div class="bg-slate-50 rounded p-2">
+                        <p class="text-xs font-bold text-slate-400 uppercase mb-2">Paiements</p>
+                        ${payments.map(p => {
+                            const st = getPaymentStatus(lease, p.period);
+                            return `<div class="flex justify-between text-sm border-b border-slate-200 pb-1 mb-1 last:border-0">
+                                <span class="font-mono text-slate-600">${p.period}</span>
+                                <span class="font-bold">${formatCurrency(p.amount)}</span>
+                                <span class="text-[10px] px-1 rounded ${st.color}">${st.label}</span>
+                                ${p.receiptFileId ? `<button onclick="actions.viewFile('${p.receiptFileId}')"><i data-lucide="file-check" class="w-3 h-3 text-emerald-600"></i></button>` : ''}
+                            </div>`
+                        }).join('')}
+                        ${payments.length === 0 ? '<p class="text-xs text-slate-400 italic">Aucun paiement</p>' : ''}
+                    </div>
+                </div>`;
             },
-             profileView: (profile) => `
-                <div class="card max-w-2xl mx-auto">
-                    <form id="profile-form">
-                        <div class="p-6 space-y-4">
-                            <h3 class="text-lg font-semibold">Informations du Bailleur</h3>
-                            <p class="text-sm text-gray-500">Ces informations seront utilisées pour générer les quittances.</p>
-                            <div><label class="block text-sm font-medium">Nom Complet</label><input name="fullname" value="${profile.fullname || ''}" type="text" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div>
-                            <div><label class="block text-sm font-medium">Adresse</label><input name="address" value="${profile.address || ''}" type="text" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div>
-                            <div><label class="block text-sm font-medium">Ville & Code Postal</label><input name="city" value="${profile.city || ''}" type="text" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div>
-                        </div>
-                        <div class="p-6 bg-gray-50 rounded-b-lg flex justify-end">
-                            <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
-                        </div>
-                    </form>
-                </div>`,
-            printableReport: (period, revenues, expenses, net, allPayments, allExpenses) => `
-                <div id="printable-report" class="font-sans">
-                     <div class="text-center mb-8">
-                        <h1 class="text-3xl font-bold">Bilan Financier</h1>
-                        <p class="text-lg">Pour la période de ${period}</p>
+            leases: () => { return `${components.header('Baux Actifs', 'Contrats en cours', `<button onclick="actions.openCreateLease()" class="btn-brand">Nouveau</button>`)}<div class="p-6 overflow-y-auto h-full pb-24 space-y-3">${store.data.leases.filter(l=>l.status==='active').map(l => {
+                const p = store.get('properties', l.propertyId);
+                const t = store.get('tenants', l.tenantId);
+                return `<div class="card p-4 flex justify-between items-center">
+                    <div>
+                        <p class="font-bold">${t?.lastname} ${t?.firstname}</p>
+                        <p class="text-sm text-slate-500">${p?.nickname} - ${formatCurrency(l.rentAmount)}</p>
                     </div>
-                    <div class="grid grid-cols-3 gap-4 mb-8 text-center">
-                        <div class="p-4 bg-green-100 rounded-lg"><p class="text-sm text-green-800">Total Revenus</p><p class="text-xl font-bold text-green-800">${formatCurrency(revenues)}</p></div>
-                        <div class="p-4 bg-red-100 rounded-lg"><p class="text-sm text-red-800">Total Charges</p><p class="text-xl font-bold text-red-800">${formatCurrency(expenses)}</p></div>
-                        <div class="p-4 bg-blue-100 rounded-lg"><p class="text-sm text-blue-800">Solde Net</p><p class="text-xl font-bold text-blue-800">${formatCurrency(net)}</p></div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-8">
-                        <div>
-                            <h2 class="text-xl font-semibold mb-2 border-b pb-1">Détail des Revenus</h2>
-                            <table class="w-full text-sm">
-                                <thead><tr><th class="text-left py-1">Date</th><th class="text-left py-1">Locataire</th><th class="text-right py-1">Montant</th></tr></thead>
-                                <tbody>${allPayments.map(p => `<tr><td>${formatDate(p.paymentDate)}</td><td>${p.tenantName}</td><td class="text-right">${formatCurrency(p.amount)}</td></tr>`).join('')}</tbody>
-                            </table>
-                        </div>
-                        <div>
-                            <h2 class="text-xl font-semibold mb-2 border-b pb-1">Détail des Charges</h2>
-                             <table class="w-full text-sm">
-                                <thead><tr><th class="text-left py-1">Date</th><th class="text-left py-1">Type</th><th class="text-right py-1">Montant</th></tr></thead>
-                                <tbody>${allExpenses.map(e => `<tr><td>${formatDate(e.date)}</td><td>${e.type}</td><td class="text-right">${formatCurrency(e.amount)}</td></tr>`).join('')}</tbody>
-                            </table>
-                        </div>
+                    <button onclick="actions.openAddPayment('${l.id}')" class="text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-3 py-1 rounded text-xs font-bold">Payer</button>
+                </div>`;
+            }).join('')}</div>`; },
+            finance: () => { return `${components.header('Finance', 'Sorties Bailleurs', `<button onclick="actions.openCreateExpense()" class="btn-brand bg-rose-600">Sortie</button>`)}<div class="p-6 overflow-y-auto h-full pb-24 space-y-2">${store.data.expenses.map(e => `<div class="card p-4 flex justify-between"><p>${escapeHtml(e.description)} <span class="text-xs text-slate-400 block">${formatDate(e.date)}</span></p><div class="text-right"><p class="text-rose-600 font-bold">-${formatCurrency(e.amount)}</p>${e.fileId?`<button onclick="actions.viewFile('${e.fileId}')" class="text-xs text-brand-600 underline">Justificatif</button>`:''}</div></div>`).join('')}</div>`; },
+            reports: () => `
+                ${components.header('Bilans & Exports', 'Extraction de données')}
+                <div class="p-6 overflow-y-auto h-full pb-24 max-w-3xl mx-auto space-y-6">
+                    <div class="card p-6">
+                        <h3 class="font-bold text-slate-800 text-lg">Export Transactions (CSV)</h3>
+                        <form onsubmit="actions.exportTransactions(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100 mt-4">
+                            <div><label class="text-xs font-bold text-slate-500 uppercase">Date Début</label><input type="date" name="start" required class="input-clean"></div>
+                            <div><label class="text-xs font-bold text-slate-500 uppercase">Date Fin</label><input type="date" name="end" required class="input-clean"></div>
+                            <div class="md:col-span-2 text-right"><button type="submit" class="btn-brand">Générer CSV</button></div>
+                        </form>
                     </div>
                 </div>`,
+            settings: () => `
+                ${components.header('Sauvegarde', 'Sécurité')}
+                <div class="p-6 overflow-y-auto h-full pb-24 max-w-2xl mx-auto space-y-6">
+                    <div class="card p-6 border-l-4 border-brand-500">
+                        <h3 class="font-bold mb-2 text-lg">Sauvegarde Complète (ZIP)</h3>
+                        <p class="text-sm text-slate-500 mb-4">Télécharge une archive contenant la base de données JSON et tous les fichiers PDF numérisés.</p>
+                        <button onclick="actions.backupFull()" class="btn-brand w-full py-3">Télécharger Backup</button>
+                    </div>
+                    <div class="card p-6 border-l-4 border-amber-500">
+                        <h3 class="font-bold mb-2 text-lg">Restauration Système</h3>
+                        <p class="text-sm text-slate-500 mb-4">Importez un fichier .zip pour restaurer l'intégralité du système (écrase les données actuelles).</p>
+                        <input type="file" id="restore-file" accept=".zip" class="block w-full text-sm mb-4 bg-slate-50 p-2 rounded border"/>
+                        <button onclick="actions.restoreFull()" class="btn-brand bg-amber-600 w-full hover:bg-amber-700">Restaurer</button>
+                    </div>
+                    <div class="text-center mt-8">
+                        <button onclick="if(confirm('Tout effacer ? Action irréversible.')) { localStorage.removeItem('g_immo_ci_v2_data'); dbEngine.clearFiles().then(() => location.reload()); }" class="text-rose-500 text-sm hover:underline">Réinitialiser l'application à zéro</button>
+                    </div>
+                </div>`
+        };
+
+        // --- 5. ACTIONS & HANDLERS ---
+
+        const actions = {
+            openCreateProperty: () => modal.open('Nouveau Bien', `
+                <form onsubmit="handlers.createProperty(event)" class="space-y-4">
+                    <div><label class="text-xs font-bold text-slate-500 uppercase">Nom</label><input name="nickname" required class="input-clean" placeholder="Ex: Villa Cocody"></div>
+                    <div><label class="text-xs font-bold text-slate-500 uppercase">Adresse</label><input name="address" required class="input-clean"></div>
+                    <div><label class="text-xs font-bold text-slate-500 uppercase">Type</label>
+                        <select name="type" class="input-clean">
+                            <option>Appartement</option><option>Villa</option><option>Studio</option><option>Bureau</option><option>Magasin</option><option>Penthouse</option>
+                        </select>
+                    </div>
+                    <button class="btn-brand mt-4 w-full">Créer</button>
+                </form>`),
+            
+            openCreateTenant: () => modal.open('Nouveau Locataire', `<form onsubmit="handlers.createTenant(event)" class="space-y-4"><div><label class="text-xs font-bold text-slate-500 uppercase">Nom</label><input name="lastname" required class="input-clean"></div><div><label class="text-xs font-bold text-slate-500 uppercase">Prénom</label><input name="firstname" required class="input-clean"></div><div><label class="text-xs font-bold text-slate-500 uppercase">Téléphone</label><input name="phone" required class="input-clean"></div><button class="btn-brand mt-4 w-full">Créer</button></form>`),
+            
+            openCreateLease: () => {
+                const props = store.data.properties.map(p => `<option value="${p.id}">${escapeHtml(p.nickname)} (${p.type})</option>`).join('');
+                const tens = store.data.tenants.map(t => `<option value="${t.id}">${escapeHtml(t.lastname)} ${escapeHtml(t.firstname)}</option>`).join('');
+                if(!props || !tens) return showToast('Créez d\'abord un bien et un locataire', 'error');
+                
+                modal.open('Nouveau Bail', `
+                <form onsubmit="handlers.createLease(event)" class="space-y-4">
+                    <div><label class="text-xs font-bold text-slate-500 uppercase">Bien</label><select name="propertyId" class="input-clean">${props}</select></div>
+                    <div><label class="text-xs font-bold text-slate-500 uppercase">Locataire</label><select name="tenantId" class="input-clean">${tens}</select></div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="text-xs font-bold text-slate-500 uppercase">Loyer</label><input type="number" name="rentAmount" required class="input-clean"></div>
+                        <div><label class="text-xs font-bold text-slate-500 uppercase">Caution</label><input type="number" name="depositAmount" required class="input-clean"></div>
+                    </div>
+                    <div><label class="text-xs font-bold text-slate-500 uppercase">Date Entrée</label><input type="date" name="startDate" required class="input-clean"></div>
+                    <div><label class="text-xs font-bold text-brand-600 uppercase">Contrat PDF</label><input type="file" name="file" accept="application/pdf" class="input-clean"></div>
+                    <button class="btn-brand mt-4 w-full">Valider le Bail</button>
+                </form>`);
+            },
+            
+            openAddPayment: (pid=null) => {
+                const activeLeases = store.data.leases.filter(l => l.status === 'active');
+                if(activeLeases.length === 0) return showToast('Aucun bail actif', 'error');
+
+                const opts = activeLeases.map(l => {
+                    const p = store.get('properties', l.propertyId);
+                    const t = store.get('tenants', l.tenantId);
+                    return `<option value="${l.id}" ${l.id===pid?'selected':''}>${t.lastname} - ${p.nickname} (${formatCurrency(l.rentAmount)})</option>`;
+                }).join('');
+                
+                modal.open('Encaisser Loyer', `
+                <form onsubmit="handlers.createPayment(event)" class="space-y-4">
+                    <div><label class="text-xs font-bold text-slate-500 uppercase">Bail</label><select name="leaseId" class="input-clean">${opts}</select></div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="text-xs font-bold text-slate-500 uppercase">Période</label><input type="month" name="period" required class="input-clean"></div>
+                        <div><label class="text-xs font-bold text-slate-500 uppercase">Montant</label><input type="number" name="amount" required class="input-clean"></div>
+                    </div>
+                    <div><label class="text-xs font-bold text-slate-500 uppercase">Date</label><input type="date" name="date" required value="${new Date().toISOString().split('T')[0]}" class="input-clean"></div>
+                    <div><label class="text-xs font-bold text-emerald-600 uppercase">Reçu PDF</label><input type="file" name="file" accept="application/pdf" class="input-clean"></div>
+                    <button class="btn-brand mt-4 w-full bg-emerald-600 hover:bg-emerald-700">Payer</button>
+                </form>`);
+            },
+            
+            openCreateExpense: () => modal.open('Sortie Bailleur', `<form onsubmit="handlers.createExpense(event)" class="space-y-4"><input name="description" placeholder="Motif" required class="input-clean"><input type="number" name="amount" required class="input-clean"><input type="date" name="date" required value="${new Date().toISOString().split('T')[0]}" class="input-clean"><div><label class="text-xs font-bold text-rose-600 uppercase">Justificatif PDF</label><input type="file" name="file" accept="application/pdf" class="input-clean"></div><button class="btn-brand mt-4 bg-rose-600">Enregistrer Sortie</button></form>`),
+            
+            closeLease: (id) => {
+                if(confirm("Confirmer le départ du locataire ? Le bail sera archivé.")) {
+                    store.update('leases', id, { status: 'archived', endDate: new Date().toISOString() });
+                    render();
+                    showToast('Bail clôturé');
+                }
+            },
+
+            deleteItem: (col, id) => { if(confirm('Supprimer ?')) { store.delete(col, id); render(); } },
+            viewFile: async (id) => { try { const f = await dbEngine.getFile(id); window.open(URL.createObjectURL(f.blob)); } catch(e){} },
+            
+            exportTransactions: (e) => {
+                e.preventDefault();
+                const fd = new FormData(e.target);
+                const start = new Date(fd.get('start'));
+                const end = new Date(fd.get('end')); end.setHours(23, 59, 59);
+
+                const lines = [];
+                lines.push("Date;Type;Description;Montant");
+                
+                store.data.payments.forEach(p => {
+                    const d = new Date(p.date);
+                    if(d>=start && d<=end) {
+                        const l = store.get('leases', p.leaseId);
+                        const t = l ? store.get('tenants', l.tenantId) : null;
+                        lines.push(`${formatDate(p.date)};Loyer;${t?t.lastname:''} (${p.period});${p.amount}`);
+                    }
+                });
+                store.data.expenses.forEach(e => {
+                     const d = new Date(e.date);
+                    if(d>=start && d<=end) lines.push(`${formatDate(e.date)};Sortie;${e.description};-${e.amount}`);
+                });
+                
+                const blob = new Blob(["\ufeff"+lines.join("\n")], {type: 'text/csv'});
+                saveAs(blob, "transactions.csv");
+            },
+            
+            backupFull: async () => {
+                loader.show('Génération du Backup...');
+                try {
+                    const zip = new JSZip();
+                    zip.file("data.json", JSON.stringify(store.data));
+                    const allFiles = await dbEngine.getAllFiles();
+                    
+                    if(allFiles.length > 50 && !confirm(`Attention: ${allFiles.length} fichiers PDF détectés. La sauvegarde peut être longue. Continuer ?`)) {
+                        loader.hide(); return;
+                    }
+                    
+                    const folder = zip.folder("documents_pdf");
+                    allFiles.forEach(f => folder.file(`${f.id}.pdf`, f.blob));
+                    
+                    const content = await zip.generateAsync({type:"blob"});
+                    saveAs(content, `G-IMMO_BACKUP_${new Date().toISOString().slice(0,10)}.zip`);
+                } catch(e) {
+                    alert("Erreur lors du backup: " + e.message);
+                } finally {
+                    loader.hide();
+                }
+            },
+            
+            restoreFull: async () => {
+                const input = document.getElementById('restore-file');
+                if(!input.files[0]) return alert('Sélectionnez un fichier ZIP.');
+                if(!confirm("ATTENTION: Toutes les données actuelles seront remplacées. Continuer ?")) return;
+
+                loader.show('Restauration...');
+                try {
+                    const zip = await JSZip.loadAsync(input.files[0]);
+                    const dataStr = await zip.file("data.json").async("string");
+                    const dataObj = JSON.parse(dataStr);
+                    
+                    await dbEngine.clearFiles();
+                    const folder = zip.folder("documents_pdf");
+                    if(folder) {
+                        const promises = [];
+                        folder.forEach((path, file) => {
+                            promises.push(file.async("blob").then(blob => {
+                                const id = path.replace('.pdf', '');
+                                return dbEngine.saveRestoredFile({
+                                    id: id,
+                                    name: "Restored",
+                                    type: "application/pdf",
+                                    blob: blob,
+                                    date: new Date().toISOString()
+                                });
+                            }));
+                        });
+                        await Promise.all(promises);
+                    }
+                    
+                    store.data = dataObj;
+                    store.save();
+                    location.reload();
+                } catch(e) {
+                    alert("Erreur restauration: " + e.message);
+                    loader.hide();
+                }
+            }
+        };
+
+        const handlers = {
+            createProperty: (e) => { e.preventDefault(); store.add('properties', Object.fromEntries(new FormData(e.target))); modal.close(); render(); showToast('Bien créé'); },
+            createTenant: (e) => { e.preventDefault(); store.add('tenants', Object.fromEntries(new FormData(e.target))); modal.close(); render(); showToast('Locataire créé'); },
+            createLease: async (e) => { 
+                e.preventDefault(); const fd = new FormData(e.target);
+                const file = fd.get('file'); let fid = null;
+                if(file.size > 0) fid = await dbEngine.saveFile(file);
+                store.add('leases', {...Object.fromEntries(fd), status: 'active', contractFileId: fid}); 
+                modal.close(); render(); showToast('Bail créé');
+            },
+            createPayment: async (e) => {
+                e.preventDefault();
+                const fd = new FormData(e.target);
+                const lid = fd.get('leaseId');
+                const per = fd.get('period');
+                const amt = parseFloat(fd.get('amount'));
+                
+                const lease = store.get('leases', lid);
+                const existing = store.data.payments.filter(p => p.leaseId === lid && p.period === per);
+                const sumExisting = existing.reduce((s, p) => s + parseFloat(p.amount), 0);
+                
+                if (sumExisting + amt > parseFloat(lease.rentAmount)) {
+                    alert(`Erreur: Le montant total (${sumExisting + amt}) dépasse le loyer (${lease.rentAmount}).`);
+                    return;
+                }
+                
+                const file = fd.get('file'); let fid = null;
+                if(file.size > 0) fid = await dbEngine.saveFile(file);
+
+                store.add('payments', {...Object.fromEntries(fd), receiptFileId: fid});
+                modal.close(); render(); showToast('Paiement enregistré');
+            },
+            createExpense: async (e) => { 
+                e.preventDefault(); const fd = new FormData(e.target);
+                const file = fd.get('file'); let fid = null;
+                if(file.size > 0) fid = await dbEngine.saveFile(file);
+                store.add('expenses', {...Object.fromEntries(fd), fileId: fid}); 
+                modal.close(); render(); showToast('Sortie enregistrée');
+            }
+        };
+
+        const modal = {
+            open: (t, c) => { document.getElementById('modal-content').innerHTML = `<div class="p-4 border-b bg-slate-50 flex justify-between items-center"><h3 class="font-bold text-slate-800">${t}</h3><button onclick="modal.close()" class="text-slate-400"><i data-lucide="x"></i></button></div><div class="p-6">${c}</div>`; document.getElementById('modal-backdrop').classList.remove('hidden'); },
+            close: () => document.getElementById('modal-backdrop').classList.add('hidden')
+        };
+
+        const render = () => {
+            const v = views[router.current] || views.dashboard;
+            document.getElementById('view-container').innerHTML = v();
+            lucide.createIcons();
+        };
+
+        const init = async () => {
+            store.load();
+            document.getElementById('sidebar').addEventListener('click', e => { const l = e.target.closest('.nav-link'); if(l) router.navigate(l.dataset.view); });
+            document.getElementById('mobile-menu-btn').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('hidden'));
+            
+            // Search
+            const search = document.getElementById('global-search');
+            const resBox = document.getElementById('search-results');
+            search.addEventListener('input', (e) => {
+                const val = e.target.value.toLowerCase().replace(/[<>]/g, '');
+                if(val.length < 2) { resBox.classList.add('hidden'); return; }
+                const hits = store.data.tenants.filter(t => t.lastname.toLowerCase().includes(val) || t.firstname.toLowerCase().includes(val));
+                resBox.innerHTML = hits.map(t => `<div class="p-3 hover:bg-slate-50 cursor-pointer border-b text-sm" onclick="router.navigate('tenantDetail', {id:'${t.id}'}); document.getElementById('search-results').classList.add('hidden')"><strong>${escapeHtml(t.lastname)} ${escapeHtml(t.firstname)}</strong><br><span class="text-xs text-slate-500">${t.phone}</span></div>`).join('') || '<div class="p-3 text-xs text-slate-400">Aucun résultat</div>';
+                resBox.classList.remove('hidden');
+            });
+            document.addEventListener('click', (e) => { if(!e.target.closest('#global-search')) resBox.classList.add('hidden'); });
+
+            render();
         };
         
-        document.addEventListener('DOMContentLoaded', initFirebase);
-
-        function initFirebase() {
-            try {
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-                onAuthStateChanged(auth, user => {
-                    if (user) {
-                        userId = user.uid;
-                        dom.authScreen.classList.add('hidden');
-                        dom.appScreen.classList.remove('hidden');
-                        setupApp();
-                        listenToFirestore();
-                    } else {
-                        userId = null;
-                        currentView = null;
-                        dom.authScreen.classList.remove('hidden');
-                        dom.appScreen.classList.add('hidden');
-                        unsubscribeAll();
-                    }
-                });
-                setupAuthForms();
-            } catch (error) { console.error("Firebase init error", error); }
-        }
-
-        function setupAuthForms() {
-            dom.loginForm.addEventListener('submit', async e => {
-                e.preventDefault();
-                const email = e.target.email.value;
-                const password = e.target.password.value;
-                dom.authError.classList.add('hidden');
-                try {
-                    await signInWithEmailAndPassword(auth, email, password);
-                } catch (error) {
-                    dom.authError.textContent = "Erreur : email ou mot de passe incorrect.";
-                    dom.authError.classList.remove('hidden');
-                }
-            });
-        }
-
-        function setupApp() {
-            document.querySelectorAll('#app-screen .sidebar-link').forEach(link => link.addEventListener('click', e => { e.preventDefault(); showPanel(e.currentTarget.id.replace('nav-', '')); }));
-            document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
-            if(!currentView) showPanel('dashboard');
-            renderAllModals();
-        }
-
-        function showPanel(panelName, contextId = null) {
-            if (panelName.startsWith('detail-')) {
-                currentView = `${panelName}-${contextId}`;
-                const type = panelName.split('-')[1];
-                if (type === 'lease') renderLeaseDetail(contextId);
-                if (type === 'property') renderPropertyDetail(contextId);
-            } else {
-                currentView = panelName;
-                document.querySelectorAll('#app-screen .sidebar-link').forEach(link => link.classList.remove('active'));
-                document.getElementById(`nav-${panelName}`)?.classList.add('active');
-                
-                const panels = {
-                    dashboard: renderDashboard,
-                    properties: () => renderListView('Biens', 'properties', ['Nom', 'Adresse', 'Type', 'Statut', ''], p => `<td class="px-6 py-4 whitespace-nowrap">${p.nickname}</td><td class="px-6 py-4 whitespace-nowrap">${p.address}</td><td class="px-6 py-4 whitespace-nowrap">${p.type}</td><td class="px-6 py-4 whitespace-nowrap">${renderPropertyStatusBadge(p.status)}</td><td class="px-6 py-4 whitespace-nowrap text-right">${renderActionsMenu(p.id, 'property')}</td>`),
-                    tenants: () => renderListView('Locataires', 'tenants', ['Nom', 'Prénom', 'Téléphone', ''], t => `<td class="px-6 py-4 whitespace-nowrap">${t.lastname}</td><td class="px-6 py-4 whitespace-nowrap">${t.firstname}</td><td class="px-6 py-4 whitespace-nowrap">${t.phone}</td><td class="px-6 py-4 whitespace-nowrap text-right">${renderActionsMenu(t.id, 'tenant')}</td>`),
-                    leases: () => renderListView('Baux', 'leases', ['Bien', 'Locataire', 'Loyer', 'Statut du mois', ''], l => `<td class="px-6 py-4 whitespace-nowrap">${l.propertyName}</td><td class="px-6 py-4 whitespace-nowrap">${l.tenantName}</td><td class="px-6 py-4 whitespace-nowrap">${formatCurrency(l.rentAmount)}</td><td class="px-6 py-4 whitespace-nowrap">${renderLeaseStatusBadge(l.status)}</td><td class="px-6 py-4 whitespace-nowrap text-right">${renderActionsMenu(l.id, 'lease')}</td>`),
-                    accounting: renderAccounting,
-                    treasury: renderTreasury,
-                    profile: renderProfile
-                };
-                if(panels[panelName]) panels[panelName]();
-            }
-            lucide.createIcons();
-        }
-
-        function renderDashboard() {
-            updateLeaseStatuses();
-            const monthlyStatus = { paid: 0, pending: 0, late: 0 };
-            localData.leases.forEach(lease => {
-                if (lease.status === 'Payé') monthlyStatus.paid++;
-                else if (lease.status === 'En attente') monthlyStatus.pending++;
-                else if (lease.status === 'En retard') monthlyStatus.late++;
-            });
-            const content = `<div class="card mb-6"><div class="p-5 border-b border-border-color"><h3 class="font-semibold text-lg">Statut des Loyers pour ${new Date().toLocaleString('fr-FR', { month: 'long' })}</h3></div><div class="grid grid-cols-1 md:grid-cols-3"><div class="p-5 text-center border-b md:border-b-0 md:border-r border-border-color"><p class="text-sm font-medium text-text-secondary">Payé</p><p class="text-3xl font-bold text-green-500 mt-1">${monthlyStatus.paid}</p></div><div class="p-5 text-center border-b md:border-b-0 md:border-r border-border-color"><p class="text-sm font-medium text-text-secondary">En attente</p><p class="text-3xl font-bold text-yellow-500 mt-1">${monthlyStatus.pending}</p></div><div class="p-5 text-center"><p class="text-sm font-medium text-text-secondary">En retard</p><p class="text-3xl font-bold text-red-500 mt-1">${monthlyStatus.late}</p></div></div></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">${templates.statCard('Revenu Total', formatCurrency(Object.values(localData.payments).flat().reduce((s, p) => s + parseFloat(p.amount), 0)), 'dollar-sign')}${templates.statCard('Biens Gérés', localData.properties.length, 'home')}${templates.statCard('Locataires', localData.tenants.length, 'users')}${templates.statCard('Baux Actifs', localData.leases.length, 'file-text')}</div>`;
-            dom.main.innerHTML = templates.header('Dashboard') + templates.contentArea(content);
-        }
-
-        function renderProfile() {
-            dom.main.innerHTML = templates.header('Mon Profil') + templates.contentArea(templates.profileView(localData.profile));
-            document.getElementById('profile-form').addEventListener('submit', async e => {
-                e.preventDefault();
-                const data = { fullname: e.target.fullname.value, address: e.target.address.value, city: e.target.city.value };
-                const path = `users/${userId}/profile/info`;
-                try {
-                    await setDoc(doc(db, path), data);
-                    alert('Profil mis à jour !');
-                } catch (error) { console.error('Error updating profile:', error); }
-            });
-        }
-        
-        function renderAccounting() {
-            const headerActions = `<div class="flex space-x-2">${templates.createButton('arrow-down', 'Ajouter une Charge', 'add-expense-btn', 'danger')}</div>`;
-            const content = `<div id="accounting-summary" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div><div class="card mt-6"><div class="p-5 border-b flex justify-between items-center"><div class="flex items-center space-x-4"><div><label for="month-filter" class="text-sm font-medium text-gray-700">Filtrer par mois :</label><input type="month" id="month-filter" class="ml-2 border-gray-300 rounded-md shadow-sm"></div></div><div class="space-x-2"><button id="export-csv-btn" class="btn btn-secondary"><i data-lucide="download" class="mr-2 h-4 w-4"></i> Exporter (CSV)</button><button id="print-report-btn" class="btn btn-secondary"><i data-lucide="printer" class="mr-2 h-4 w-4"></i> Imprimer le Bilan</button></div></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-x-6"><div class="p-5"><h3 class="font-semibold mb-2 text-lg">Revenus</h3><div id="revenues-table-container"></div></div><div class="p-5 lg:border-l"><h3 class="font-semibold mb-2 text-lg">Charges</h3><div id="expenses-table-container"></div></div></div></div>`;
-            dom.main.innerHTML = templates.header('Bilan Comptable', headerActions) + templates.contentArea(content);
-            updateAccountingView();
-            lucide.createIcons();
-            document.getElementById('month-filter').addEventListener('change', updateAccountingView);
-            document.getElementById('export-csv-btn').addEventListener('click', exportToCSV);
-            document.getElementById('print-report-btn').addEventListener('click', printReport);
-            document.getElementById('add-expense-btn').addEventListener('click', () => openModal('add-expense-modal'));
-        }
-
-        function renderTreasury() {
-             const headerActions = `<div class="flex space-x-2">${templates.createButton('repeat', 'Ajouter une Transaction', 'add-transaction-btn')}</div>`;
-             const content = `
-                <div id="treasury-summary"></div>
-                <div class="mt-6">
-                    <div class="card">
-                     <div class="p-5 border-b flex justify-between items-center">
-                        <h3 class="font-semibold text-lg">Transactions Personnelles</h3>
-                        <button id="export-treasury-csv-btn" class="btn btn-secondary"><i data-lucide="download" class="mr-2 h-4 w-4"></i> Exporter (CSV)</button>
-                     </div>
-                    <div id="transactions-container"></div>
-                    </div>
-                </div>`;
-            dom.main.innerHTML = templates.header('Trésorerie Personnelle', headerActions) + templates.contentArea(content);
-            updateTreasuryView();
-            lucide.createIcons();
-            document.getElementById('add-transaction-btn').addEventListener('click', () => openModal('add-transaction-modal'));
-             document.getElementById('export-treasury-csv-btn').addEventListener('click', exportTreasuryToCSV);
-        }
-        
-        function updateTreasuryView() {
-            const currentMonth = new Date().toISOString().slice(0, 7);
-            const monthlyTransactions = localData.personal_transactions.filter(t => t.date.startsWith(currentMonth));
-            const totalIncome = monthlyTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + parseFloat(t.amount), 0);
-            const totalExpense = monthlyTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + parseFloat(t.amount), 0);
-            const savings = totalIncome - totalExpense;
-
-            const summaryContainer = document.getElementById('treasury-summary');
-            if (summaryContainer) {
-                summaryContainer.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    ${templates.statCard('Revenus du Mois', formatCurrency(totalIncome), 'arrow-up-circle', 'green')}
-                    ${templates.statCard('Dépenses du Mois', formatCurrency(totalExpense), 'arrow-down-circle', 'red')}
-                    ${templates.statCard('Capacité d\'Épargne', formatCurrency(savings), 'piggy-bank', 'blue')}
-                </div>`;
-                lucide.createIcons();
-            }
-            
-            const transactionsContainer = document.getElementById('transactions-container');
-            if (transactionsContainer) {
-                const tableContent = localData.personal_transactions.sort((a,b) => new Date(b.date) - new Date(a.date)).map(t => {
-                    const isIncome = t.type === 'income';
-                    return `<tr data-id="${t.id}"><td class="p-3">${formatDate(t.date)}</td><td class="p-3">${t.category}</td><td class="p-3 text-right font-semibold ${isIncome ? 'text-green-600' : 'text-red-600'}">${isIncome ? '+' : '-'} ${formatCurrency(t.amount)}</td><td class="p-3 text-right">${renderActionsMenu(t.id, 'personal_transaction')}</td></tr>`;
-                }).join('');
-                transactionsContainer.innerHTML = `<table class="w-full text-sm"><thead class="border-b bg-gray-50"><tr><th class="p-3 text-left font-medium">Date</th><th class="p-3 text-left font-medium">Catégorie</th><th class="p-3 text-right font-medium">Montant</th><th></th></tr></thead><tbody class="divide-y">${tableContent}</tbody></table>`;
-
-                transactionsContainer.querySelectorAll('[data-action-menu-button]').forEach(button => {
-                    const menu = button.nextElementSibling;
-                    button.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        document.querySelectorAll('[data-action-menu]').forEach(m => { if (m !== menu) m.classList.add('hidden'); });
-                        menu.classList.toggle('hidden');
-                    });
-                });
-                transactionsContainer.querySelectorAll('.edit-btn, .delete-btn').forEach(btn => btn.addEventListener('click', e => {
-                    e.stopPropagation();
-                    const id = e.currentTarget.dataset.id;
-                    const type = e.currentTarget.dataset.type;
-                    if(btn.classList.contains('edit-btn')) openModal(`edit-${type}-modal`, id);
-                    else openDeleteConfirmation(id, type);
-                }));
-                 lucide.createIcons();
-            }
-        }
-        
-        function updateAccountingView() {
-            const filterValue = document.getElementById('month-filter')?.value || '';
-            let allPayments = Object.values(localData.payments).flat();
-            let allExpenses = localData.expenses;
-            if (filterValue) {
-                allPayments = allPayments.filter(p => p.period === filterValue);
-                allExpenses = allExpenses.filter(e => e.date.startsWith(filterValue));
-            }
-            const totalRevenue = allPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
-            const totalExpenses = allExpenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
-            const netResult = totalRevenue - totalExpenses;
-            const summaryContainer = document.getElementById('accounting-summary');
-            if(summaryContainer) {
-                summaryContainer.innerHTML = `${templates.statCard('Total Revenus', formatCurrency(totalRevenue), 'arrow-up-circle', 'green')}${templates.statCard('Total Charges', formatCurrency(totalExpenses), 'arrow-down-circle', 'red')}${templates.statCard('Solde Net', formatCurrency(netResult), 'scale', 'blue')}`;
-                lucide.createIcons();
-            }
-            const revenuesContainer = document.getElementById('revenues-table-container');
-            if(revenuesContainer) {
-                const tableContent = allPayments.length > 0 ? allPayments.sort((a,b) => new Date(b.paymentDate) - new Date(a.paymentDate)).map(p => `<tr><td class="py-2">${formatDate(p.paymentDate)}</td><td class="py-2">${p.tenantName}</td><td class="py-2 text-right font-semibold">${formatCurrency(p.amount)}</td></tr>`).join('') : `<tr><td colspan="3" class="text-center py-10 text-gray-500">Aucun revenu.</td></tr>`;
-                revenuesContainer.innerHTML = `<table class="w-full text-sm"><thead class="border-b"><tr><th class="py-2 text-left font-medium">Date</th><th class="py-2 text-left font-medium">Locataire</th><th class="py-2 text-right font-medium">Montant</th></tr></thead><tbody class="divide-y divide-gray-200">${tableContent}</tbody></table>`;
-            }
-            const expensesContainer = document.getElementById('expenses-table-container');
-             if(expensesContainer) {
-                const tableContent = allExpenses.length > 0 ? allExpenses.sort((a,b) => new Date(b.date) - new Date(a.date)).map(e => `<tr data-id="${e.id}"><td class="py-2">${formatDate(e.date)}</td><td class="py-2">${e.type}</td><td class="py-2 text-right font-semibold">${formatCurrency(e.amount)}</td><td class="py-2 text-right">${renderActionsMenu(e.id, 'expense')}</td></tr>`).join('') : `<tr><td colspan="4" class="text-center py-10 text-gray-500">Aucune charge.</td></tr>`;
-                expensesContainer.innerHTML = `<table class="w-full text-sm"><thead class="border-b"><tr><th class="py-2 text-left font-medium">Date</th><th class="py-2 text-left font-medium">Type</th><th class="py-2 text-right font-medium">Montant</th><th class="py-2 text-right font-medium"></th></tr></thead><tbody class="divide-y divide-gray-200">${tableContent}</tbody></table>`;
-                
-                expensesContainer.querySelectorAll('[data-action-menu-button]').forEach(button => {
-                    const menu = button.nextElementSibling;
-                    button.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        document.querySelectorAll('[data-action-menu]').forEach(m => { if (m !== menu) m.classList.add('hidden'); });
-                        menu.classList.toggle('hidden');
-                    });
-                });
-
-                expensesContainer.querySelectorAll('.edit-btn, .delete-btn').forEach(btn => btn.addEventListener('click', e => {
-                    e.stopPropagation();
-                    const id = e.currentTarget.dataset.id;
-                    const type = e.currentTarget.dataset.type;
-                    if(btn.classList.contains('edit-btn')) openModal(`edit-${type}-modal`, id);
-                    else openDeleteConfirmation(id, type);
-                }));
-                 lucide.createIcons();
-            }
-        }
-        
-        function exportToCSV() {
-            const filterValue = document.getElementById('month-filter').value;
-            let allPayments = Object.values(localData.payments).flat();
-            let allExpenses = localData.expenses;
-            if (filterValue) {
-                allPayments = allPayments.filter(p => p.period === filterValue);
-                allExpenses = allExpenses.filter(e => e.date.startsWith(filterValue));
-            }
-
-            let csvContent = "Type;Date;Description;Montant (CFA)\n";
-            allPayments.forEach(p => csvContent += `Revenu;${p.paymentDate};Loyer ${p.tenantName};${p.amount}\n`);
-            allExpenses.forEach(e => csvContent += `Charge;${e.date};${e.type} - ${e.description || ''};${e.amount}\n`);
-            
-            const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", `bilan_comptable_${filterValue || 'global'}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        function exportTreasuryToCSV() {
-            let csvContent = "Type;Date;Catégorie;Montant (CFA)\n";
-            localData.personal_transactions.forEach(t => csvContent += `${t.type};${t.date};${t.category};${t.amount}\n`);
-            
-            const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", `tresorerie_personnelle.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        function printReport() {
-            const filterValue = document.getElementById('month-filter').value;
-            let allPayments = Object.values(localData.payments).flat();
-            let allExpenses = localData.expenses;
-            if (filterValue) {
-                allPayments = allPayments.filter(p => p.period === filterValue);
-                allExpenses = allExpenses.filter(e => e.date.startsWith(filterValue));
-            }
-            const totalRevenue = allPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
-            const totalExpenses = allExpenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
-            const netResult = totalRevenue - totalExpenses;
-            const period = filterValue ? new Date(filterValue + '-02').toLocaleString('fr-FR', {month: 'long', year: 'numeric'}) : 'Globale';
-
-            const container = document.getElementById('printable-report-container');
-            container.innerHTML = templates.printableReport(period, totalRevenue, totalExpenses, netResult, allPayments, allExpenses);
-            window.print();
-        }
-        
-        function renderListView(title, collectionName, headers, rowRenderer) {
-            updateLeaseStatuses();
-            const singularName = { properties: 'property', tenants: 'tenant', leases: 'lease' }[collectionName];
-            const btnId = `add-${singularName}-btn`;
-            const button = templates.createButton('plus', `Nouveau`, btnId);
-            const table = `<div class="card"><div class="table-wrapper"><table class="w-full text-sm"><thead class="bg-gray-50"><tr>${headers.map(h => `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${h}</th>`).join('')}</tr></thead><tbody id="${collectionName}-table-body" class="bg-white divide-y divide-gray-200"></tbody></table></div></div>`;
-            dom.main.innerHTML = templates.header(title, button) + templates.contentArea(table);
-            document.getElementById(btnId).addEventListener('click', () => openModal(`add-${singularName}-modal`));
-            updateTable(collectionName, localData[collectionName], rowRenderer);
-        }
-
-        function renderLeaseDetail(leaseId) {
-            const lease = localData.leases.find(l => l.id === leaseId);
-            if(lease) {
-                currentView = `detail-lease-${leaseId}`;
-                dom.main.innerHTML = templates.leaseDetailView(lease);
-                document.getElementById('back-to-leases').addEventListener('click', () => showPanel('leases'));
-                document.getElementById('add-payment-btn').addEventListener('click', () => openModal('add-payment-modal', leaseId));
-                document.getElementById('manage-deposit-btn').addEventListener('click', () => openModal('manage-deposit-modal', leaseId));
-                updatePaymentsTable(leaseId);
-                lucide.createIcons();
-            } else {
-                showPanel('leases'); 
-            }
-        }
-        
-        function renderPropertyDetail(propertyId) {
-            const property = localData.properties.find(p => p.id === propertyId);
-            if (property) {
-                currentView = `detail-property-${propertyId}`;
-                dom.main.innerHTML = templates.propertyDetailView(property);
-                document.getElementById('back-to-properties').addEventListener('click', () => showPanel('properties'));
-                lucide.createIcons();
-            } else {
-                showPanel('properties');
-            }
-        }
-
-        function updateTable(collectionName, data, rowRenderer) {
-            const tbody = document.getElementById(`${collectionName}-table-body`);
-            if (!tbody) return;
-            tbody.innerHTML = data.length === 0 ? `<tr><td colspan="100%" class="text-center py-10 text-gray-500">Aucun élément.</td></tr>` : data.map(item => `<tr data-id="${item.id}" class="cursor-pointer hover:bg-gray-50">${rowRenderer(item)}</tr>`).join('');
-            
-            tbody.querySelectorAll('tr').forEach(tr => {
-                tr.addEventListener('click', (e) => {
-                    if (e.target.closest('[data-action-menu-button]')) return;
-                    if (collectionName === 'leases') showPanel('detail-lease', tr.dataset.id);
-                    if (collectionName === 'properties') showPanel('detail-property', tr.dataset.id);
-                });
-            });
-            tbody.querySelectorAll('[data-action-menu-button]').forEach(button => {
-                const menu = button.nextElementSibling;
-                button.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    document.querySelectorAll('[data-action-menu]').forEach(m => { if (m !== menu) m.classList.add('hidden'); });
-                    menu.classList.toggle('hidden');
-                });
-            });
-            tbody.querySelectorAll('.edit-btn, .delete-btn').forEach(btn => btn.addEventListener('click', e => {
-                e.stopPropagation();
-                const id = e.currentTarget.dataset.id;
-                const type = e.currentTarget.dataset.type;
-                if(btn.classList.contains('edit-btn')) {
-                    openModal(`edit-${type}-modal`, id);
-                } else {
-                    openDeleteConfirmation(id, type);
-                }
-            }));
-        }
-
-        function updatePaymentsTable(leaseId) {
-            const tbody = document.getElementById('payments-table-body');
-            if(!tbody) return;
-            const payments = localData.payments[leaseId] || [];
-            tbody.innerHTML = payments.length === 0 ? `<tr><td colspan="4" class="text-center py-10 text-gray-500">Aucun paiement.</td></tr>` : payments.map(p => `<tr data-id="${p.id}" data-lease-id="${leaseId}"><td class="px-6 py-4">${new Date(p.period + '-02').toLocaleString('fr-FR', {month:'long', year:'numeric'})}</td><td class="px-6 py-4">${formatDate(p.paymentDate)}</td><td class="px-6 py-4">${formatCurrency(p.amount)}</td><td class="px-6 py-4 text-right"><div class="flex items-center justify-end space-x-2"> <button class="generate-receipt-btn text-accent-color hover:underline" data-payment-id="${p.id}" data-lease-id="${leaseId}"><i class="inline-block mr-1 h-4 w-4" data-lucide="receipt"></i> Quittance</button> ${renderActionsMenu(p.id, 'payment')}</div></td></tr>`).join('');
-            
-            tbody.querySelectorAll('.generate-receipt-btn').forEach(btn => btn.addEventListener('click', (e) => {
-                const { leaseId, paymentId } = e.currentTarget.dataset;
-                openModal('receipt-modal', { leaseId, paymentId });
-            }));
-
-            tbody.querySelectorAll('.edit-btn, .delete-btn').forEach(btn => btn.addEventListener('click', e => {
-                e.stopPropagation();
-                const paymentId = e.currentTarget.dataset.id;
-                const type = e.currentTarget.dataset.type;
-                if(btn.classList.contains('edit-btn')) {
-                    openModal(`edit-${type}-modal`, { paymentId, leaseId });
-                } else {
-                    openDeleteConfirmation(paymentId, type, { leaseId });
-                }
-            }));
-
-            lucide.createIcons();
-        }
-        
-        document.body.addEventListener('click', (e) => {
-             if (!e.target.closest('[data-action-menu-button]')) {
-                document.querySelectorAll('[data-action-menu]').forEach(menu => menu.classList.add('hidden'));
-             }
-        });
-
-        function renderActionsMenu(id, type) {
-            return `<div class="relative inline-block text-left">
-                <button data-action-menu-button="${id}" class="text-gray-400 hover:text-accent-color"><i data-lucide="more-vertical" class="pointer-events-none"></i></button>
-                <div data-action-menu="${id}" class="origin-top-right absolute right-0 mt-2 w-32 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-10">
-                    <div class="py-1" role="none">
-                        <a href="#" class="edit-btn text-gray-700 block px-4 py-2 text-sm hover:bg-gray-100" data-id="${id}" data-type="${type}">Modifier</a>
-                        <a href="#" class="delete-btn text-red-600 block px-4 py-2 text-sm hover:bg-gray-100" data-id="${id}" data-type="${type}">Supprimer</a>
-                    </div>
-                </div>
-            </div>`;
-        }
-        
-        function renderAllModals() {
-            const propertyFormContent = `<div><label class="text-sm font-medium text-gray-700">Nom</label><input name="nickname" type="text" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div><div><label class="text-sm font-medium text-gray-700">Adresse</label><input name="address" type="text" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div><div><label class="text-sm font-medium text-gray-700">Type</label><select name="type" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"><option>Appartement</option><option>Maison</option><option>Bureau</option><option>Studio</option></select></div><div><label class="text-sm font-medium text-gray-700">Statut</label><select name="status" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"><option>Actif</option><option>Inactif</option></select></div>`;
-            const propertyForm = `<form id="add-property-modal-form" class="p-6 space-y-4">${propertyFormContent}<div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('add-property-modal')}</div></form>`;
-            const editPropertyForm = `<form id="edit-property-modal-form" class="p-6 space-y-4"><input type="hidden" name="id">${propertyFormContent}<div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('edit-property-modal', true)}</div></form>`;
-
-            const tenantFormContent = `<div class="grid grid-cols-2 gap-4"><div><label class="text-sm font-medium text-gray-700">Nom</label><input name="lastname" type="text" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div><div><label class="text-sm font-medium text-gray-700">Prénom</label><input name="firstname" type="text" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div></div><div><label class="text-sm font-medium text-gray-700">Téléphone</label><input name="phone" type="tel" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div>`;
-            const tenantForm = `<form id="add-tenant-modal-form" class="p-6 space-y-4">${tenantFormContent}<div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('add-tenant-modal')}</div></form>`;
-            const editTenantForm = `<form id="edit-tenant-modal-form" class="p-6 space-y-4"><input type="hidden" name="id">${tenantFormContent}<div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('edit-tenant-modal', true)}</div></form>`;
-            
-            const leaseFormContent = `<div><label class="text-sm font-medium text-gray-700">Bien</label><select name="property" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></select></div><div><label class="text-sm font-medium text-gray-700">Locataire</label><select name="tenant" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></select></div><div class="grid grid-cols-2 gap-4"><div><label class="text-sm font-medium text-gray-700">Début</label><input name="startDate" type="date" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div><div><label class="text-sm font-medium text-gray-700">Loyer (CFA)</label><input name="rentAmount" type="number" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div></div><div><label class="text-sm font-medium text-gray-700">Dépôt de Garantie (CFA)</label><input name="depositAmount" type="number" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div>`;
-            const leaseForm = `<form id="add-lease-modal-form" class="p-6 space-y-4">${leaseFormContent}<div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('add-lease-modal')}</div></form>`;
-            const editLeaseForm = `<form id="edit-lease-modal-form" class="p-6 space-y-4"><input type="hidden" name="id">${leaseFormContent}<div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('edit-lease-modal', true)}</div></form>`;
-
-            const expenseFormContent = `<div><label class="text-sm font-medium text-gray-700">Bien Associé</label><select name="property" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></select></div><div class="grid grid-cols-2 gap-4"><div><label class="text-sm font-medium text-gray-700">Date</label><input name="date" type="date" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div><div><label class="text-sm font-medium text-gray-700">Montant (CFA)</label><input name="amount" type="number" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div></div><div><label class="text-sm font-medium text-gray-700">Type de charge</label><select name="type" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"><option>Travaux</option><option>Impôts</option><option>Syndic</option><option>Assurance</option><option>Autre</option></select></div><div><label class="text-sm font-medium text-gray-700">Description</label><textarea name="description" rows="2" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></textarea></div>`;
-            const expenseForm = `<form id="add-expense-modal-form" class="p-6 space-y-4">${expenseFormContent}<div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('add-expense-modal')}</div></form>`;
-            const editExpenseForm = `<form id="edit-expense-modal-form" class="p-6 space-y-4"><input type="hidden" name="id">${expenseFormContent}<div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('edit-expense-modal', true)}</div></form>`;
-
-            const paymentFormContent = `<input type="hidden" name="leaseId"><div class="grid grid-cols-2 gap-4"><div><label class="text-sm font-medium text-gray-700">Période</label><input name="period" type="month" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div><div><label class="text-sm font-medium text-gray-700">Montant (CFA)</label><input name="amount" type="number" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div></div><div><label class="text-sm font-medium text-gray-700">Date de paiement</label><input name="paymentDate" type="date" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div>`;
-            const paymentForm = `<form id="add-payment-modal-form" class="p-6 space-y-4">${paymentFormContent}<div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('add-payment-modal')}</div></form>`;
-            const editPaymentForm = `<form id="edit-payment-modal-form" class="p-6 space-y-4"><input type="hidden" name="id"><input type="hidden" name="leaseId">${paymentFormContent}<div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('edit-payment-modal', true)}</div></form>`;
-            
-            const manageDepositForm = `<form id="manage-deposit-modal-form" class="p-6 space-y-4">
-                <input type="hidden" name="id">
-                <div><label class="text-sm font-medium">Statut</label><select name="depositStatus" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"><option>Reçu</option><option>Remboursé</option><option>Partiellement retenu</option></select></div>
-                <div><label class="text-sm font-medium">Date de restitution</label><input name="depositReturnDate" type="date" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div>
-                <div><label class="text-sm font-medium">Montant restitué (CFA)</label><input name="depositAmountReturned" type="number" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></div>
-                <div><label class="text-sm font-medium">Notes (justification si retenue)</label><textarea name="depositNotes" rows="2" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"></textarea></div>
-                <div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('manage-deposit-modal', true)}</div>
-            </form>`;
-            
-            const transactionForm = `<form id="add-transaction-modal-form" class="p-6 space-y-4"><div class="grid grid-cols-2 gap-4"><div><label class="text-sm font-medium">Date</label><input name="date" type="date" required class="mt-1 block w-full border-gray-300 rounded-md"></div><div><label class="text-sm font-medium">Type</label><select name="type" class="mt-1 block w-full border-gray-300 rounded-md"><option value="income">Revenu</option><option value="expense">Dépense</option></select></div></div><div><label class="text-sm font-medium">Catégorie</label><input name="category" type="text" required class="mt-1 block w-full border-gray-300 rounded-md"></div><div><label class="text-sm font-medium">Montant (CFA)</label><input name="amount" type="number" required class="mt-1 block w-full border-gray-300 rounded-md"></div><div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('add-transaction-modal')}</div></form>`;
-            const editTransactionForm = `<form id="edit-transaction-modal-form" class="p-6 space-y-4"><input type="hidden" name="id"><div class="grid grid-cols-2 gap-4"><div><label class="text-sm font-medium">Date</label><input name="date" type="date" required class="mt-1 block w-full border-gray-300 rounded-md"></div><div><label class="text-sm font-medium">Type</label><select name="type" class="mt-1 block w-full border-gray-300 rounded-md"><option value="income">Revenu</option><option value="expense">Dépense</option></select></div></div><div><label class="text-sm font-medium">Catégorie</label><input name="category" type="text" required class="mt-1 block w-full border-gray-300 rounded-md"></div><div><label class="text-sm font-medium">Montant (CFA)</label><input name="amount" type="number" required class="mt-1 block w-full border-gray-300 rounded-md"></div><div class="p-6 bg-gray-50 -m-6 mt-6 rounded-b-lg">${templates.formButtons('edit-transaction-modal', true)}</div></form>`;
-
-            dom.modalContainer.innerHTML = `
-                ${templates.modal('add-property-modal', 'Ajouter un Bien', propertyForm)}
-                ${templates.modal('edit-property-modal', 'Modifier le Bien', editPropertyForm)}
-                ${templates.modal('add-tenant-modal', 'Ajouter un Locataire', tenantForm)}
-                ${templates.modal('edit-tenant-modal', 'Modifier le Locataire', editTenantForm)}
-                ${templates.modal('add-lease-modal', 'Créer un Bail', leaseForm)}
-                ${templates.modal('edit-lease-modal', 'Modifier le Bail', editLeaseForm)}
-                ${templates.modal('add-expense-modal', 'Ajouter une Charge', expenseForm)}
-                ${templates.modal('edit-expense-modal', 'Modifier la Charge', editExpenseForm)}
-                ${templates.modal('add-payment-modal', 'Ajouter un Paiement', paymentForm)}
-                ${templates.modal('edit-payment-modal', 'Modifier un Paiement', editPaymentForm)}
-                ${templates.modal('manage-deposit-modal', 'Gérer le Dépôt de Garantie', manageDepositForm)}
-                ${templates.modal('receipt-modal', 'Quittance de Loyer', '', 'max-w-4xl')}
-                ${templates.modal('add-transaction-modal', 'Nouvelle Transaction Personnelle', transactionForm)}
-                ${templates.modal('edit-transaction-modal', 'Modifier la Transaction', editTransactionForm)}
-                ${templates.confirmDeleteModal('confirm-delete-modal', 'l\'élément')}
-            `;
-            setupModalControlsAndForms();
-        }
-
-        function setupModalControlsAndForms() {
-            dom.modalContainer.addEventListener('click', e => {
-                const closeButton = e.target.closest('[data-close-modal]');
-                if(closeButton) closeModal(closeButton.dataset.closeModal);
-                if(e.target.classList.contains('fixed')) closeModal(e.target.id);
-            });
-            
-            const forms = {
-                'add-property': { collection: 'properties', data: f => ({ nickname: f.nickname.value, address: f.address.value, type: f.type.value, status: f.status.value }) },
-                'edit-property': { collection: 'properties', data: f => ({ nickname: f.nickname.value, address: f.address.value, type: f.type.value, status: f.status.value }), isUpdate: true },
-                'add-tenant': { collection: 'tenants', data: f => ({ firstname: f.firstname.value, lastname: f.lastname.value, fullname: `${f.firstname.value} ${f.lastname.value}`, phone: f.phone.value }) },
-                'edit-tenant': { collection: 'tenants', data: f => ({ firstname: f.firstname.value, lastname: f.lastname.value, fullname: `${f.firstname.value} ${f.lastname.value}`, phone: f.phone.value }), isUpdate: true },
-                'add-lease': { collection: 'leases', data: f => ({ propertyId: f.property.value, propertyName: f.property.options[f.property.selectedIndex].text, tenantId: f.tenant.value, tenantName: f.tenant.options[f.tenant.selectedIndex].text, startDate: f.startDate.value, rentAmount: f.rentAmount.value, depositAmount: f.depositAmount.value, depositStatus: 'Reçu' })},
-                'edit-lease': { collection: 'leases', data: f => ({ propertyId: f.property.value, propertyName: f.property.options[f.property.selectedIndex].text, tenantId: f.tenant.value, tenantName: f.tenant.options[f.tenant.selectedIndex].text, startDate: f.startDate.value, rentAmount: f.rentAmount.value, depositAmount: f.depositAmount.value }), isUpdate: true },
-                'add-expense': { collection: 'expenses', data: f => ({ propertyId: f.property.value, propertyName: f.property.options[f.property.selectedIndex].text, date: f.date.value, amount: f.amount.value, type: f.type.value, description: f.description.value }) },
-                'edit-expense': { collection: 'expenses', data: f => ({ propertyId: f.property.value, propertyName: f.property.options[f.property.selectedIndex].text, date: f.date.value, amount: f.amount.value, type: f.type.value, description: f.description.value }), isUpdate: true },
-                'add-payment': { collection: 'payments', data: f => {
-                    const lease = localData.leases.find(l => l.id === f.leaseId.value);
-                    return { period: f.period.value, amount: f.amount.value, paymentDate: f.paymentDate.value, leaseId: f.leaseId.value, tenantName: lease.tenantName, propertyName: lease.propertyName };
-                }},
-                 'edit-payment': { collection: 'payments', data: f => {
-                    const lease = localData.leases.find(l => l.id === f.leaseId.value);
-                    return { period: f.period.value, amount: f.amount.value, paymentDate: f.paymentDate.value, leaseId: f.leaseId.value, tenantName: lease.tenantName, propertyName: lease.propertyName };
-                }, isUpdate: true},
-                'manage-deposit': { collection: 'leases', data: f => ({ depositStatus: f.depositStatus.value, depositReturnDate: f.depositReturnDate.value, depositAmountReturned: f.depositAmountReturned.value, depositNotes: f.depositNotes.value }), isUpdate: true },
-                'add-transaction': { collection: 'personal_transactions', data: f => ({ date: f.date.value, type: f.type.value, category: f.category.value, amount: f.amount.value }) },
-                'edit-transaction': { collection: 'personal_transactions', data: f => ({ date: f.date.value, type: f.type.value, category: f.category.value, amount: f.amount.value }), isUpdate: true },
-            };
-
-            for (const [formIdPrefix, config] of Object.entries(forms)) {
-                const formElement = document.getElementById(`${formIdPrefix}-modal-form`);
-                if(formElement) {
-                    formElement.addEventListener('submit', async (e) => {
-                        e.preventDefault();
-                        const data = config.data(e.target);
-                        const modalId = `${formIdPrefix}-modal`;
-                        if (config.isUpdate) {
-                             if(config.collection === 'payments'){
-                                await handleUpdate(e.target.id.value, `leases/${e.target.leaseId.value}/payments`, data);
-                            } else {
-                                await handleUpdate(e.target.id.value, config.collection, data);
-                            }
-                        } else if (config.collection === 'payments') {
-                            await handleCreate(`leases/${e.target.leaseId.value}/payments`, data);
-                        } else {
-                            await handleCreate(config.collection, data);
-                        }
-                        closeModal(modalId);
-                    });
-                }
-            }
-        }
-        
-        function openModal(modalId, context = null) {
-            const modal = document.getElementById(modalId);
-            if (!modal) return;
-            const form = modal.querySelector('form');
-            if(form) form.reset();
-            
-            const contentContainer = document.getElementById(`${modalId}-content`);
-            
-            if (modalId === 'receipt-modal' && context) {
-                const { leaseId, paymentId } = context;
-                const lease = localData.leases.find(l => l.id === leaseId);
-                const payment = (localData.payments[leaseId] || []).find(p => p.id === paymentId);
-                if (lease && payment) {
-                    contentContainer.innerHTML = templates.receipt(lease, payment);
-                }
-            } else if (modalId.startsWith('edit-') && context) {
-                const type = modalId.split('-')[1];
-                const collectionName = {property: 'properties', tenant: 'tenants', lease: 'leases', expense: 'expenses', personal_transaction: 'personal_transactions', payment: 'payments'}[type];
-                
-                let item;
-                if(type === 'payment'){
-                    const { leaseId, paymentId } = context;
-                    item = (localData.payments[leaseId] || []).find(p => p.id === paymentId);
-                    if(item) item.leaseId = leaseId;
-                } else {
-                    item = localData[collectionName]?.find(d => d.id === context);
-                }
-
-                if (item) {
-                    form.id.value = item.id;
-                    if(type === 'property') { form.nickname.value = item.nickname; form.address.value = item.address; form.type.value = item.type; form.status.value = item.status || 'Actif'; } 
-                    else if (type === 'tenant') { form.firstname.value = item.firstname || ''; form.lastname.value = item.lastname || ''; form.phone.value = item.phone || ''; } 
-                    else if (type === 'lease') {
-                        populateSelect(form.property, localData.properties, '...', d => d.id, d => d.nickname, item.propertyId);
-                        populateSelect(form.tenant, localData.tenants, '...', d => d.id, d => d.fullname, item.tenantId);
-                        form.startDate.value = item.startDate; form.rentAmount.value = item.rentAmount;
-                        form.depositAmount.value = item.depositAmount || '';
-                    } else if (type === 'expense') {
-                        populateSelect(form.property, localData.properties, '...', d => d.id, d => d.nickname, item.propertyId);
-                        form.date.value = item.date;
-                        form.amount.value = item.amount;
-                        form.type.value = item.type;
-                        form.description.value = item.description;
-                    } else if (type === 'personal_transaction') {
-                        form.date.value = item.date;
-                        form.type.value = item.type;
-                        form.category.value = item.category;
-                        form.amount.value = item.amount;
-                    } else if (type === 'payment') {
-                        form.leaseId.value = item.leaseId;
-                        form.period.value = item.period;
-                        form.amount.value = item.amount;
-                        form.paymentDate.value = item.paymentDate;
-                    }
-                }
-            } else if (modalId === 'manage-deposit-modal' && context) {
-                const lease = localData.leases.find(l => l.id === context);
-                if (lease) {
-                    form.id.value = lease.id;
-                    form.depositStatus.value = lease.depositStatus || 'Reçu';
-                    form.depositReturnDate.value = lease.depositReturnDate || '';
-                    form.depositAmountReturned.value = lease.depositAmountReturned || '';
-                    form.depositNotes.value = lease.depositNotes || '';
-                }
-            } else if (modalId === 'add-lease-modal') {
-                const rentedPropertyIds = localData.leases.map(l => l.propertyId);
-                const availableProperties = localData.properties.filter(p => !rentedPropertyIds.includes(p.id) && p.status !== 'Inactif');
-                populateSelect(form.property, availableProperties, 'Sélectionner un bien disponible', d => d.id, d => d.nickname);
-                populateSelect(form.tenant, localData.tenants, 'Sélectionner un locataire', d => d.id, d => d.fullname);
-            } else if (modalId === 'add-expense-modal') {
-                 populateSelect(form.property, localData.properties, 'Sélectionner un bien', d => d.id, d => d.nickname);
-            } else if (modalId === 'add-payment-modal' && context) {
-                form.leaseId.value = context;
-            }
-            
-            modal.classList.remove('hidden');
-            lucide.createIcons();
-        }
-
-        function openDeleteConfirmation(id, type, context) {
-            const modal = document.getElementById('confirm-delete-modal');
-            if(!modal) return;
-            modal.classList.remove('hidden');
-            lucide.createIcons();
-            const confirmBtn = document.getElementById('confirm-delete-btn');
-            
-            let collectionName = {property: 'properties', tenant: 'tenants', lease: 'leases', expense: 'expenses', personal_transaction: 'personal_transactions'}[type];
-            if(type === 'payment') {
-                collectionName = `leases/${context.leaseId}/payments`;
-            }
-            
-            const newConfirmBtn = confirmBtn.cloneNode(true);
-            confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-            
-            newConfirmBtn.addEventListener('click', async () => {
-                await handleDelete(id, collectionName);
-                closeModal('confirm-delete-modal');
-            }, { once: true });
-        }
-        
-        function closeModal(modalId) { 
-            const modal = document.getElementById(modalId)
-            if(modal) modal.classList.add('hidden');
-        }
-
-        function populateSelect(selectEl, data, placeholder, valueFn, textFn, selectedValue = null) {
-            selectEl.innerHTML = `<option value="">${placeholder}</option>`;
-            data.forEach(item => { const option = document.createElement('option'); option.value = valueFn(item); option.textContent = textFn(item); if (selectedValue === option.value) { option.selected = true; } selectEl.appendChild(option); });
-        }
-        
-        function listenToFirestore() {
-            unsubscribeAll();
-            const collectionsToListen = ['properties', 'tenants', 'leases', 'expenses', 'personal_transactions'];
-            collectionsToListen.forEach(name => {
-                const path = `users/${userId}/${name}`;
-                const q = query(collection(db, path));
-                const unsubscribe = onSnapshot(q, (snapshot) => {
-                    localData[name] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    if (name === 'leases' || name === 'properties') listenToSubCollectionPayments();
-                    else refreshCurrentView();
-                }, error => console.error(`Error listening to ${name}:`, error));
-                unsubscribeListeners.push(unsubscribe);
-            });
-            const profilePath = `users/${userId}/profile/info`;
-            const unsubProfile = onSnapshot(doc(db, profilePath), (doc) => {
-                localData.profile = doc.data() || {};
-                refreshCurrentView();
-            }, error => console.error(`Error listening to profile:`, error));
-            unsubscribeListeners.push(unsubProfile);
-        }
-        
-        function listenToSubCollectionPayments() {
-            let leaseCount = localData.leases.length;
-            let loadedCount = 0;
-            const tempPayments = {};
-
-            if (leaseCount === 0) {
-                localData.payments = {};
-                refreshCurrentView();
-                return;
-            }
-
-            localData.leases.forEach(lease => {
-                const path = `users/${userId}/leases/${lease.id}/payments`;
-                const q = query(collection(db, path), orderBy('paymentDate', 'desc'));
-                const unsubscribe = onSnapshot(q, (snapshot) => {
-                    tempPayments[lease.id] = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    loadedCount++;
-                    if (loadedCount >= leaseCount) { 
-                        localData.payments = tempPayments;
-                        refreshCurrentView();
-                    }
-                }, error => console.error(`Error listening to payments for lease ${lease.id}:`, error));
-                unsubscribeListeners.push(unsubscribe);
-            });
-        }
-
-        function unsubscribeAll() { unsubscribeListeners.forEach(unsub => unsub()); unsubscribeListeners = []; }
-        
-        function refreshCurrentView() {
-            if (currentView) {
-                if (currentView.startsWith('detail-')) {
-                    const [_, type, id] = currentView.split('-');
-                    showPanel(`detail-${type}`, id);
-                } else {
-                    showPanel(currentView);
-                }
-            }
-        }
-
-        function updateLeaseStatuses() {
-            const now = new Date();
-            const currentMonthStr = now.toISOString().slice(0, 7); // "YYYY-MM"
-            const today = now.getDate();
-            localData.leases.forEach(lease => {
-                const leaseStartDate = new Date(lease.startDate);
-                if (leaseStartDate > now) { lease.status = 'Futur'; return; }
-                const paymentsForLease = localData.payments[lease.id] || [];
-                const paidThisMonth = paymentsForLease.some(p => p.period === currentMonthStr);
-                if (paidThisMonth) { lease.status = 'Payé'; } 
-                else { lease.status = (today > 10) ? 'En retard' : 'En attente'; }
-            });
-        }
-
-        function renderLeaseStatusBadge(status) {
-            const statuses = { 'Payé': 'status-paid', 'En attente': 'status-pending', 'En retard': 'status-late', 'Futur': 'bg-gray-100 text-gray-800' };
-            const badgeClass = statuses[status] || 'bg-gray-100 text-gray-800';
-            return `<span class="status-badge ${badgeClass}">${status}</span>`;
-        }
-        
-        function renderPropertyStatusBadge(status) {
-            const statuses = { 'Actif': 'status-paid', 'Inactif': 'status-inactive' };
-            const badgeClass = statuses[status] || 'bg-gray-100 text-gray-800';
-            return `<span class="status-badge ${badgeClass}">${status}</span>`;
-        }
-
-        async function handleCreate(collectionName, data) {
-            const path = `users/${userId}/${collectionName}`;
-            try { await addDoc(collection(db, path), data); } 
-            catch (error) { console.error(`Erreur ajout:`, error); }
-        }
-
-        async function handleUpdate(docId, collectionName, data) {
-            const path = `users/${userId}/${collectionName}`;
-            try { await updateDoc(doc(db, path, docId), data); }
-            catch (error) { console.error("Update Error:", error); }
-        }
-
-        async function handleDelete(docId, collectionName) {
-            const path = `users/${userId}/${collectionName}`;
-            try { await deleteDoc(doc(db, path, docId)); }
-            catch (error) { console.error("Delete Error:", error); }
-        }
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
-
