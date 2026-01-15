@@ -8,8 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- FileSaver -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Courier+Prime&display=swap" rel="stylesheet">
     
@@ -81,7 +79,7 @@
             <div class="keypad-btn" onclick="auth.press(0)">0</div>
             <div class="keypad-btn flex items-center justify-center bg-transparent shadow-none active:bg-transparent" onclick="auth.check()"><i data-lucide="arrow-right" class="w-8 h-8 sm:w-10 sm:h-10 text-emerald-500"></i></div>
         </div>
-        <p class="mt-8 text-slate-600 text-[10px] sm:text-xs">Version Mobile 2.4 (Full JSON)</p>
+        <p class="mt-8 text-slate-600 text-[10px] sm:text-xs">Version Mobile 2.5 (Native)</p>
     </div>
 
     <!-- Notifications -->
@@ -329,6 +327,21 @@
                 reader.onerror = reject;
                 reader.readAsDataURL(blob);
             });
+        };
+        
+        // Native Download Function (removes FileSaver dependency)
+        const downloadFile = (blob, fileName) => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }, 100);
         };
         
         const loader = {
@@ -793,7 +806,7 @@
                     if(d>=start && d<=end) lines.push(`${formatDate(e.date)};SORTIE;-;-;${e.description};-${e.amount}`);
                 });
                 const blob = new Blob(["\ufeff"+lines.join("\n")], {type: 'text/csv'});
-                saveAs(blob, `Situation_Bailleur_${start.toISOString().slice(0,10)}.csv`);
+                downloadFile(blob, `Situation_Bailleur_${start.toISOString().slice(0,10)}.csv`);
             },
             
             backupFull: async () => {
@@ -824,7 +837,7 @@
                     
                     // 4. Save as single JSON
                     const blob = new Blob([JSON.stringify(backupObj)], {type: "application/json"});
-                    saveAs(blob, `G-IMMO_FULL_BACKUP_${new Date().toISOString().slice(0,10)}.json`);
+                    downloadFile(blob, `G-IMMO_FULL_BACKUP_${new Date().toISOString().slice(0,10)}.json`);
                 } catch(e) {
                     alert("Erreur de sauvegarde: " + e.message);
                 } finally {
