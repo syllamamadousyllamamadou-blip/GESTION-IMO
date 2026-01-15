@@ -8,8 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- JSZip & FileSaver -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- FileSaver -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Courier+Prime&display=swap" rel="stylesheet">
@@ -82,7 +81,7 @@
             <div class="keypad-btn" onclick="auth.press(0)">0</div>
             <div class="keypad-btn flex items-center justify-center bg-transparent shadow-none active:bg-transparent" onclick="auth.check()"><i data-lucide="arrow-right" class="w-8 h-8 sm:w-10 sm:h-10 text-emerald-500"></i></div>
         </div>
-        <p class="mt-8 text-slate-600 text-[10px] sm:text-xs">Version Mobile 2.3</p>
+        <p class="mt-8 text-slate-600 text-[10px] sm:text-xs">Version Mobile 2.4 (Full JSON)</p>
     </div>
 
     <!-- Notifications -->
@@ -323,6 +322,14 @@
         const formatCurrency = (n) => new Intl.NumberFormat('fr-FR').format(n || 0) + ' FCFA';
         const formatDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '-';
         const escapeHtml = (s) => (s || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        const blobToDataURL = (blob) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        };
         
         const loader = {
             show: (txt = 'Chargement...') => { document.getElementById('loader-text').innerText = txt; document.getElementById('loader').classList.remove('hidden'); },
@@ -538,14 +545,14 @@
                 ${components.header('Backup', 'Données')}
                 <div class="p-4 sm:p-6 pb-24 max-w-2xl mx-auto space-y-6">
                     <div class="card p-6 border-l-4 border-brand-500">
-                        <h3 class="font-bold mb-2 text-lg">Sauvegarde (ZIP)</h3>
-                        <p class="text-sm text-slate-500 mb-4">Base de données + Fichiers PDF</p>
-                        <button onclick="actions.backupFull()" class="btn-brand w-full py-3">Télécharger Backup</button>
+                        <h3 class="font-bold mb-2 text-lg">Sauvegarde Totale (JSON)</h3>
+                        <p class="text-sm text-slate-500 mb-4">Génère un seul fichier contenant TOUTES les données et TOUS les PDF.</p>
+                        <button onclick="actions.backupFull()" class="btn-brand w-full py-3">Télécharger Sauvegarde</button>
                     </div>
                     <div class="card p-6 border-l-4 border-amber-500">
                         <h3 class="font-bold mb-2 text-lg">Restaurer</h3>
-                        <p class="text-sm text-slate-500 mb-4">Depuis un fichier .zip</p>
-                        <input type="file" id="restore-file" accept=".zip" class="block w-full text-sm mb-4 bg-slate-50 p-2 rounded border"/>
+                        <p class="text-sm text-slate-500 mb-4">Depuis un fichier .json</p>
+                        <input type="file" id="restore-file" accept=".json" class="block w-full text-sm mb-4 bg-slate-50 p-2 rounded border"/>
                         <button onclick="actions.restoreFull()" class="btn-brand bg-amber-600 w-full hover:bg-amber-700">Restaurer</button>
                     </div>
                     <div class="text-center mt-8 pb-8">
@@ -790,19 +797,36 @@
             },
             
             backupFull: async () => {
-                loader.show('Génération du Backup...');
+                loader.show('Génération Sauvegarde Complète...');
                 try {
-                    const zip = new JSZip();
-                    zip.file("data.json", JSON.stringify(store.data));
-                    const allFiles = await dbEngine.getAllFiles();
-                    if(allFiles.length > 0) {
-                        const folder = zip.folder("documents_pdf");
-                        allFiles.forEach(f => folder.file(`${f.id}.pdf`, f.blob));
-                    }
-                    const content = await zip.generateAsync({type:"blob"});
-                    saveAs(content, `G-IMMO_FULL_BACKUP_${new Date().toISOString().slice(0,10)}.zip`);
+                    // 1. Get all files
+                    const files = await dbEngine.getAllFiles();
+                    
+                    // 2. Convert files to Base64 strings for embedding in JSON
+                    const filesData = await Promise.all(files.map(async f => ({
+                        id: f.id,
+                        name: f.name,
+                        type: f.type,
+                        date: f.date,
+                        data: await blobToDataURL(f.blob)
+                    })));
+                    
+                    // 3. Create monolithic backup object
+                    const backupObj = {
+                        meta: {
+                            version: '2.0',
+                            type: 'G-IMMO_FULL_BACKUP',
+                            date: new Date().toISOString()
+                        },
+                        store: store.data,
+                        files: filesData
+                    };
+                    
+                    // 4. Save as single JSON
+                    const blob = new Blob([JSON.stringify(backupObj)], {type: "application/json"});
+                    saveAs(blob, `G-IMMO_FULL_BACKUP_${new Date().toISOString().slice(0,10)}.json`);
                 } catch(e) {
-                    alert("Erreur: " + e.message);
+                    alert("Erreur de sauvegarde: " + e.message);
                 } finally {
                     loader.hide();
                 }
@@ -810,30 +834,42 @@
             
             restoreFull: async () => {
                 const input = document.getElementById('restore-file');
-                if(!input.files[0]) return alert('Sélectionnez un fichier ZIP.');
+                if(!input.files[0]) return alert('Sélectionnez un fichier JSON.');
                 if(!confirm("ATTENTION: Toutes les données actuelles seront remplacées. Continuer ?")) return;
+                
                 loader.show('Restauration...');
                 try {
-                    const zip = await JSZip.loadAsync(input.files[0]);
-                    const dataStr = await zip.file("data.json").async("string");
-                    const dataObj = JSON.parse(dataStr);
-                    await dbEngine.clearFiles();
-                    const folder = zip.folder("documents_pdf");
-                    if(folder) {
-                        const promises = [];
-                        folder.forEach((path, file) => {
-                            promises.push(file.async("blob").then(blob => {
-                                const id = path.replace('.pdf', '');
-                                return dbEngine.saveRestoredFile({ id: id, name: "Restored", type: "application/pdf", blob: blob, date: new Date().toISOString() });
-                            }));
-                        });
-                        await Promise.all(promises);
+                    const text = await input.files[0].text();
+                    const json = JSON.parse(text);
+                    
+                    // Basic validation
+                    if (!json.store || !Array.isArray(json.files)) {
+                        throw new Error("Format de fichier invalide.");
                     }
-                    store.data = dataObj;
+                    
+                    // 1. Restore Database files
+                    await dbEngine.clearFiles();
+                    for (const f of json.files) {
+                        const res = await fetch(f.data);
+                        const blob = await res.blob();
+                        await dbEngine.saveRestoredFile({
+                            id: f.id,
+                            name: f.name,
+                            type: f.type,
+                            date: f.date,
+                            blob: blob
+                        });
+                    }
+                    
+                    // 2. Restore LocalStorage Data
+                    store.data = json.store;
                     store.save();
+                    
+                    alert("Restauration terminée avec succès !");
                     location.reload();
                 } catch(e) {
                     alert("Erreur restauration: " + e.message);
+                } finally {
                     loader.hide();
                 }
             }
