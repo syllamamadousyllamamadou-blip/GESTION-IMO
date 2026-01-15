@@ -2,23 +2,23 @@
 <html lang="fr" class="h-full bg-slate-50">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G-IMMO | Gestion Complète CI (Finale)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>G-IMMO | Gestion Complète CI</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- JSZip & FileSaver -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" xintegrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwWWfokGNhBNlE8lTxlGYTqBvnyfK750q1re5pt+vwDDi4PB0pvX66HomspQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js" xintegrity="sha512-Qwa0tco3Ka6BnL+SYwKuT99sdXgHGk0PSRiHJrD64OzsXQo4e1PSP65le5zX48u7y/0wvGxs7y/k7v/Q2bo++A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Courier+Prime&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['Courier Prime', 'monospace'] },
                     colors: {
                         brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 900: '#0c4a6e' },
                         sidebar: '#0f172a'
@@ -27,27 +27,68 @@
             }
         }
     </script>
-    <!-- CORRECTION ICI: Ajout de type="text/tailwindcss" pour supporter @apply -->
     <style type="text/tailwindcss">
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         @media print {
             .no-print { display: none !important; }
-            body { background: white; }
+            body { background: white; height: auto; overflow: visible; }
+            #receipt-print-area { display: block !important; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; background: white; }
+            #app-screen, #login-screen, #modal-backdrop { display: none; }
         }
         .card { @apply bg-white rounded-xl border border-slate-200 shadow-sm transition-all duration-200; }
         .card:hover { @apply shadow-md border-slate-300; }
         .input-clean { @apply w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 transition-colors; }
         .btn-brand { @apply text-white bg-brand-600 hover:bg-brand-700 font-medium rounded-lg text-sm px-4 py-2 text-center inline-flex items-center gap-2 transition-colors shadow-sm; }
+        
+        /* Keypad Styles */
+        .keypad-btn { @apply w-20 h-20 rounded-full bg-slate-800 text-white text-2xl font-bold flex items-center justify-center active:bg-brand-600 active:scale-95 transition-all shadow-lg select-none cursor-pointer; }
+        .pin-dot { @apply w-4 h-4 rounded-full border-2 border-slate-400 transition-colors; }
+        .pin-dot.active { @apply bg-brand-500 border-brand-500; }
+        .pin-dot.error { @apply bg-rose-500 border-rose-500 animate-pulse; }
     </style>
 </head>
 <body class="h-full text-slate-800 antialiased overflow-hidden selection:bg-brand-100">
 
+    <!-- LOGIN SCREEN (TABLET KEYPAD) -->
+    <div id="login-screen" class="fixed inset-0 bg-slate-900 z-[100] flex flex-col items-center justify-center p-4">
+        <div class="mb-8 text-center">
+            <i data-lucide="building-2" class="w-12 h-12 text-brand-500 mx-auto mb-4"></i>
+            <h1 class="text-2xl font-bold text-white tracking-widest">G-IMMO ACCESS</h1>
+            <p class="text-slate-400 text-sm mt-2">Veuillez saisir votre code d'accès</p>
+        </div>
+
+        <!-- Pin Dots -->
+        <div class="flex gap-4 mb-10">
+            <div id="dot-1" class="pin-dot"></div>
+            <div id="dot-2" class="pin-dot"></div>
+            <div id="dot-3" class="pin-dot"></div>
+            <div id="dot-4" class="pin-dot"></div>
+        </div>
+
+        <!-- Keypad -->
+        <div class="grid grid-cols-3 gap-6">
+            <div class="keypad-btn" onclick="auth.press(1)">1</div>
+            <div class="keypad-btn" onclick="auth.press(2)">2</div>
+            <div class="keypad-btn" onclick="auth.press(3)">3</div>
+            <div class="keypad-btn" onclick="auth.press(4)">4</div>
+            <div class="keypad-btn" onclick="auth.press(5)">5</div>
+            <div class="keypad-btn" onclick="auth.press(6)">6</div>
+            <div class="keypad-btn" onclick="auth.press(7)">7</div>
+            <div class="keypad-btn" onclick="auth.press(8)">8</div>
+            <div class="keypad-btn" onclick="auth.press(9)">9</div>
+            <div class="keypad-btn flex items-center justify-center bg-transparent shadow-none active:bg-transparent text-rose-500" onclick="auth.clear()"><i data-lucide="delete" class="w-8 h-8"></i></div>
+            <div class="keypad-btn" onclick="auth.press(0)">0</div>
+            <div class="keypad-btn flex items-center justify-center bg-transparent shadow-none active:bg-transparent" onclick="auth.check()"><i data-lucide="arrow-right" class="w-8 h-8 text-emerald-500"></i></div>
+        </div>
+        <p class="mt-8 text-slate-600 text-xs">Version Tablette 2.2</p>
+    </div>
+
     <!-- Notifications -->
-    <div id="toast-container" class="fixed top-5 right-5 z-[60] flex flex-col gap-2 pointer-events-none"></div>
+    <div id="toast-container" class="fixed top-5 right-5 z-[60] flex flex-col gap-2 pointer-events-none no-print"></div>
 
     <!-- App Container -->
-    <div id="app-screen" class="flex h-full flex-col md:flex-row">
+    <div id="app-screen" class="flex h-full flex-col md:flex-row hidden opacity-0 transition-opacity duration-500">
         
         <!-- Sidebar -->
         <aside id="sidebar" class="bg-sidebar w-full md:w-64 flex-shrink-0 flex flex-col border-r border-slate-800 transition-all duration-300 hidden md:flex no-print h-full z-40 relative">
@@ -98,6 +139,9 @@
                 <a href="#" data-view="settings" class="nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
                     <i data-lucide="database-backup" class="mr-3 h-5 w-5 opacity-70"></i> Sauvegardes
                 </a>
+                <button onclick="location.reload()" class="mt-10 flex items-center px-3 py-2 text-sm font-medium rounded-md text-rose-400 hover:bg-slate-800 hover:text-white transition-colors w-full">
+                    <i data-lucide="log-out" class="mr-3 h-5 w-5 opacity-70"></i> Déconnexion
+                </button>
             </nav>
         </aside>
 
@@ -118,12 +162,60 @@
     </div>
 
     <!-- Loader Overlay -->
-    <div id="loader" class="fixed inset-0 bg-white/80 z-[70] hidden flex flex-col items-center justify-center">
+    <div id="loader" class="fixed inset-0 bg-white/80 z-[70] hidden flex flex-col items-center justify-center no-print">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600"></div>
         <p class="mt-4 text-slate-600 font-medium" id="loader-text">Traitement...</p>
     </div>
 
+    <!-- HIDDEN PRINT TEMPLATE FOR RECEIPTS -->
+    <div id="receipt-print-area" class="hidden bg-white p-8">
+        <!-- Content injected dynamically -->
+    </div>
+
     <script>
+        // --- 0. AUTH SYSTEM ---
+        const auth = {
+            pin: '',
+            target: '5008',
+            press: (num) => {
+                if(auth.pin.length < 4) {
+                    auth.pin += num;
+                    auth.updateUI();
+                    if(auth.pin.length === 4) setTimeout(auth.check, 200);
+                }
+            },
+            clear: () => {
+                auth.pin = '';
+                auth.updateUI();
+            },
+            updateUI: () => {
+                for(let i=1; i<=4; i++) {
+                    const dot = document.getElementById(`dot-${i}`);
+                    if (i <= auth.pin.length) dot.classList.add('active');
+                    else dot.classList.remove('active', 'error');
+                }
+            },
+            check: () => {
+                if(auth.pin === auth.target) {
+                    // Success
+                    const screen = document.getElementById('login-screen');
+                    const app = document.getElementById('app-screen');
+                    screen.classList.add('opacity-0', 'pointer-events-none');
+                    setTimeout(() => { screen.style.display = 'none'; }, 500);
+                    
+                    app.classList.remove('hidden');
+                    // Force reflow
+                    void app.offsetWidth;
+                    app.classList.remove('opacity-0');
+                } else {
+                    // Error
+                    navigator.vibrate?.(200);
+                    for(let i=1; i<=4; i++) document.getElementById(`dot-${i}`).classList.add('error');
+                    setTimeout(auth.clear, 500);
+                }
+            }
+        };
+
         // --- 1. MOTEUR DE BASE DE DONNÉES ---
         
         const DB_NAME = 'GImmoCIDB';
@@ -183,7 +275,7 @@
             payments: [],
             expenses: [],
             logs: [],
-            profile: { fullname: 'Mon Agence Immobilière', currency: 'FCFA' }
+            profile: { fullname: 'G-IMMO AGENCE', currency: 'FCFA', address: 'Abidjan, Cocody', phone: '+225 07 00 00 00' }
         };
 
         const store = {
@@ -221,6 +313,7 @@
 
         const formatCurrency = (n) => new Intl.NumberFormat('fr-FR').format(n || 0) + ' FCFA';
         const formatDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '-';
+        const formatLongDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : '-';
         const escapeHtml = (s) => (s || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         
         const loader = {
@@ -358,9 +451,14 @@
                 const prop = store.get('properties', lease.propertyId);
                 const payments = store.data.payments.filter(p => p.leaseId === lease.id).sort((a,b) => b.date.localeCompare(a.date));
                 return `<div class="card p-4 mb-4 ${isActive?'border-brand-500 ring-1 ring-brand-100': 'opacity-75 bg-slate-50'}">
-                    <div class="flex justify-between mb-2">
-                        <p class="font-bold text-lg">${prop?.nickname}</p>
-                        ${components.statusBadge(lease.status)}
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex-1">
+                            <p class="font-bold text-lg">${prop?.nickname}</p>
+                            ${components.statusBadge(lease.status)}
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="actions.editLease('${lease.id}')" title="Modifier le Bail" class="text-slate-400 hover:text-brand-600 p-1"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                        </div>
                     </div>
                     <div class="flex gap-4 text-sm mb-4">
                         <span>Loyer: <strong>${formatCurrency(lease.rentAmount)}</strong></span>
@@ -369,14 +467,21 @@
                     ${lease.contractFileId ? `<button onclick="actions.viewFile('${lease.contractFileId}')" class="text-xs text-brand-600 mb-4 flex gap-1"><i data-lucide="file-text" class="w-3 h-3"></i> Voir Contrat PDF</button>` : ''}
                     
                     <div class="bg-slate-50 rounded p-2">
-                        <p class="text-xs font-bold text-slate-400 uppercase mb-2">Paiements</p>
+                        <p class="text-xs font-bold text-slate-400 uppercase mb-2">Paiements & Reçus</p>
                         ${payments.map(p => {
                             const st = getPaymentStatus(lease, p.period);
-                            return `<div class="flex justify-between text-sm border-b border-slate-200 pb-1 mb-1 last:border-0">
-                                <span class="font-mono text-slate-600">${p.period}</span>
-                                <span class="font-bold">${formatCurrency(p.amount)}</span>
-                                <span class="text-[10px] px-1 rounded ${st.color}">${st.label}</span>
-                                ${p.receiptFileId ? `<button onclick="actions.viewFile('${p.receiptFileId}')"><i data-lucide="file-check" class="w-3 h-3 text-emerald-600"></i></button>` : ''}
+                            return `<div class="flex justify-between items-center text-sm border-b border-slate-200 pb-2 mb-2 last:border-0 last:pb-0">
+                                <div>
+                                    <div class="font-mono text-slate-600">${p.period}</div>
+                                    <div class="font-bold">${formatCurrency(p.amount)}</div>
+                                </div>
+                                <div class="flex gap-2 items-center">
+                                    <button onclick="actions.editPayment('${p.id}')" title="Modifier le paiement" class="bg-slate-100 hover:bg-amber-100 hover:text-amber-700 text-slate-600 p-2 rounded-full transition-colors"><i data-lucide="pencil" class="w-3 h-3"></i></button>
+                                    <button onclick="actions.openReceiptGenerator('${p.id}')" title="Générer Reçu Flexible" class="bg-slate-100 hover:bg-brand-100 hover:text-brand-600 text-slate-600 p-2 rounded-full transition-colors">
+                                        <i data-lucide="printer" class="w-4 h-4"></i>
+                                    </button>
+                                    ${p.receiptFileId ? `<button onclick="actions.viewFile('${p.receiptFileId}')" class="bg-slate-100 hover:bg-emerald-100 hover:text-emerald-600 text-slate-600 p-2 rounded-full transition-colors"><i data-lucide="file-check" class="w-4 h-4"></i></button>` : ''}
+                                </div>
                             </div>`
                         }).join('')}
                         ${payments.length === 0 ? '<p class="text-xs text-slate-400 italic">Aucun paiement</p>' : ''}
@@ -396,14 +501,15 @@
             }).join('')}</div>`; },
             finance: () => { return `${components.header('Finance', 'Sorties Bailleurs', `<button onclick="actions.openCreateExpense()" class="btn-brand bg-rose-600">Sortie</button>`)}<div class="p-6 overflow-y-auto h-full pb-24 space-y-2">${store.data.expenses.map(e => `<div class="card p-4 flex justify-between"><p>${escapeHtml(e.description)} <span class="text-xs text-slate-400 block">${formatDate(e.date)}</span></p><div class="text-right"><p class="text-rose-600 font-bold">-${formatCurrency(e.amount)}</p>${e.fileId?`<button onclick="actions.viewFile('${e.fileId}')" class="text-xs text-brand-600 underline">Justificatif</button>`:''}</div></div>`).join('')}</div>`; },
             reports: () => `
-                ${components.header('Bilans & Exports', 'Extraction de données')}
+                ${components.header('Bilans & Exports', 'Situation Complète du Bailleur')}
                 <div class="p-6 overflow-y-auto h-full pb-24 max-w-3xl mx-auto space-y-6">
-                    <div class="card p-6">
-                        <h3 class="font-bold text-slate-800 text-lg">Export Transactions (CSV)</h3>
+                    <div class="card p-6 border-l-4 border-indigo-500">
+                        <h3 class="font-bold text-slate-800 text-lg">Situation Financière (CSV)</h3>
+                        <p class="text-sm text-slate-500 mb-4">Génère un tableau complet de tous les flux pour Excel.</p>
                         <form onsubmit="actions.exportTransactions(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100 mt-4">
                             <div><label class="text-xs font-bold text-slate-500 uppercase">Date Début</label><input type="date" name="start" required class="input-clean"></div>
                             <div><label class="text-xs font-bold text-slate-500 uppercase">Date Fin</label><input type="date" name="end" required class="input-clean"></div>
-                            <div class="md:col-span-2 text-right"><button type="submit" class="btn-brand">Générer CSV</button></div>
+                            <div class="md:col-span-2 text-right"><button type="submit" class="btn-brand bg-indigo-600 hover:bg-indigo-700">Générer Rapport CSV</button></div>
                         </form>
                     </div>
                 </div>`,
@@ -412,17 +518,17 @@
                 <div class="p-6 overflow-y-auto h-full pb-24 max-w-2xl mx-auto space-y-6">
                     <div class="card p-6 border-l-4 border-brand-500">
                         <h3 class="font-bold mb-2 text-lg">Sauvegarde Complète (ZIP)</h3>
-                        <p class="text-sm text-slate-500 mb-4">Télécharge une archive contenant la base de données JSON et tous les fichiers PDF numérisés.</p>
+                        <p class="text-sm text-slate-500 mb-4">Télécharge l'historique client et tous les documents.</p>
                         <button onclick="actions.backupFull()" class="btn-brand w-full py-3">Télécharger Backup</button>
                     </div>
                     <div class="card p-6 border-l-4 border-amber-500">
                         <h3 class="font-bold mb-2 text-lg">Restauration Système</h3>
-                        <p class="text-sm text-slate-500 mb-4">Importez un fichier .zip pour restaurer l'intégralité du système (écrase les données actuelles).</p>
+                        <p class="text-sm text-slate-500 mb-4">Importez un fichier .zip pour restaurer le système.</p>
                         <input type="file" id="restore-file" accept=".zip" class="block w-full text-sm mb-4 bg-slate-50 p-2 rounded border"/>
                         <button onclick="actions.restoreFull()" class="btn-brand bg-amber-600 w-full hover:bg-amber-700">Restaurer</button>
                     </div>
                     <div class="text-center mt-8">
-                        <button onclick="if(confirm('Tout effacer ? Action irréversible.')) { localStorage.removeItem('g_immo_ci_v2_data'); dbEngine.clearFiles().then(() => location.reload()); }" class="text-rose-500 text-sm hover:underline">Réinitialiser l'application à zéro</button>
+                        <button onclick="if(confirm('Tout effacer ? Action irréversible.')) { localStorage.removeItem('g_immo_ci_v2_data'); dbEngine.clearFiles().then(() => location.reload()); }" class="text-rose-500 text-sm hover:underline">Réinitialiser l'application</button>
                     </div>
                 </div>`
         };
@@ -458,11 +564,43 @@
                         <div><label class="text-xs font-bold text-slate-500 uppercase">Caution</label><input type="number" name="depositAmount" required class="input-clean"></div>
                     </div>
                     <div><label class="text-xs font-bold text-slate-500 uppercase">Date Entrée</label><input type="date" name="startDate" required class="input-clean"></div>
-                    <div><label class="text-xs font-bold text-brand-600 uppercase">Contrat PDF</label><input type="file" name="file" accept="application/pdf" class="input-clean"></div>
+                    <div><label class="text-xs font-bold text-brand-600 uppercase">Contrat PDF (Scan)</label><input type="file" name="file" accept="application/pdf" class="input-clean"></div>
                     <button class="btn-brand mt-4 w-full">Valider le Bail</button>
                 </form>`);
             },
             
+            editLease: (id) => {
+                const lease = store.get('leases', id);
+                if(!lease) return;
+                modal.open('Modifier le Bail', `
+                <form onsubmit="handlers.updateLease(event, '${id}')" class="space-y-4">
+                     <p class="text-xs text-amber-600 bg-amber-50 p-2 rounded">Attention : Les modifications impactent l'historique.</p>
+                     <div class="grid grid-cols-2 gap-4">
+                        <div><label class="text-xs font-bold text-slate-500 uppercase">Loyer</label><input type="number" name="rentAmount" value="${lease.rentAmount}" required class="input-clean"></div>
+                        <div><label class="text-xs font-bold text-slate-500 uppercase">Caution</label><input type="number" name="depositAmount" value="${lease.depositAmount}" required class="input-clean"></div>
+                    </div>
+                    <div><label class="text-xs font-bold text-slate-500 uppercase">Date Entrée</label><input type="date" name="startDate" value="${lease.startDate}" required class="input-clean"></div>
+                    <div><label class="text-xs font-bold text-brand-600 uppercase">Remplacer Contrat PDF (Optionnel)</label><input type="file" name="file" accept="application/pdf" class="input-clean"></div>
+                    <button class="btn-brand mt-4 w-full bg-amber-600 hover:bg-amber-700">Enregistrer Modifications</button>
+                </form>`);
+            },
+
+            editPayment: (id) => {
+                const p = store.get('payments', id);
+                if(!p) return;
+                modal.open('Modifier le Paiement', `
+                <form onsubmit="handlers.updatePayment(event, '${id}')" class="space-y-4">
+                    <p class="text-xs text-amber-600 bg-amber-50 p-2 rounded">Modification d'une écriture comptable.</p>
+                    <div><label class="text-xs font-bold text-slate-500 uppercase">Période</label><input type="month" name="period" value="${p.period}" required class="input-clean"></div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="text-xs font-bold text-slate-500 uppercase">Montant</label><input type="number" name="amount" value="${p.amount}" required class="input-clean"></div>
+                        <div><label class="text-xs font-bold text-slate-500 uppercase">Date</label><input type="date" name="date" value="${p.date.split('T')[0]}" required class="input-clean"></div>
+                    </div>
+                    <div><label class="text-xs font-bold text-emerald-600 uppercase">Remplacer Reçu PDF (Optionnel)</label><input type="file" name="file" accept="application/pdf" class="input-clean"></div>
+                    <button class="btn-brand mt-4 w-full bg-amber-600 hover:bg-amber-700">Mettre à jour</button>
+                </form>`);
+            },
+
             openAddPayment: (pid=null) => {
                 const activeLeases = store.data.leases.filter(l => l.status === 'active');
                 if(activeLeases.length === 0) return showToast('Aucun bail actif', 'error');
@@ -481,9 +619,102 @@
                         <div><label class="text-xs font-bold text-slate-500 uppercase">Montant</label><input type="number" name="amount" required class="input-clean"></div>
                     </div>
                     <div><label class="text-xs font-bold text-slate-500 uppercase">Date</label><input type="date" name="date" required value="${new Date().toISOString().split('T')[0]}" class="input-clean"></div>
-                    <div><label class="text-xs font-bold text-emerald-600 uppercase">Reçu PDF</label><input type="file" name="file" accept="application/pdf" class="input-clean"></div>
+                    <div><label class="text-xs font-bold text-emerald-600 uppercase">Reçu PDF (Scan Optionnel)</label><input type="file" name="file" accept="application/pdf" class="input-clean"></div>
+                    <p class="text-xs text-slate-500 italic">Astuce: Vous pourrez générer un reçu imprimable après l'enregistrement.</p>
                     <button class="btn-brand mt-4 w-full bg-emerald-600 hover:bg-emerald-700">Payer</button>
                 </form>`);
+            },
+            
+            // --- NEW: GENERATEUR DE REÇU FLEXIBLE ---
+            openReceiptGenerator: (paymentId) => {
+                const payment = store.get('payments', paymentId);
+                const lease = store.get('leases', payment.leaseId);
+                const tenant = store.get('tenants', lease.tenantId);
+                const prop = store.get('properties', lease.propertyId);
+
+                // Formulaire de pré-configuration flexible
+                modal.open('Générer Reçu', `
+                    <div class="space-y-4">
+                        <p class="text-sm text-slate-500">Modifiez les informations ci-dessous avant l'impression pour adapter le reçu (Avance, Solde, etc).</p>
+                        <form id="receipt-config-form">
+                            <div><label class="text-xs font-bold text-slate-500 uppercase">Titre du Document</label><input id="r-title" value="QUITTANCE DE LOYER" class="input-clean font-bold"></div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><label class="text-xs font-bold text-slate-500 uppercase">Montant</label><input id="r-amount" value="${payment.amount}" class="input-clean"></div>
+                                <div><label class="text-xs font-bold text-slate-500 uppercase">Mode</label><input id="r-mode" value="Espèces" class="input-clean"></div>
+                            </div>
+                            <div><label class="text-xs font-bold text-slate-500 uppercase">Période / Motif</label><input id="r-period" value="Loyer de ${payment.period}" class="input-clean"></div>
+                            <div><label class="text-xs font-bold text-slate-500 uppercase">Note Libre</label><textarea id="r-note" class="input-clean" rows="2">Paiement reçu avec remerciements.</textarea></div>
+                        </form>
+                        <button onclick="actions.printReceipt('${payment.id}')" class="btn-brand w-full justify-center"><i data-lucide="printer"></i> Imprimer / PDF</button>
+                    </div>
+                `);
+            },
+
+            printReceipt: (paymentId) => {
+                const payment = store.get('payments', paymentId);
+                const lease = store.get('leases', payment.leaseId);
+                const tenant = store.get('tenants', lease.tenantId);
+                const prop = store.get('properties', lease.propertyId);
+
+                // Get manual values
+                const title = document.getElementById('r-title').value;
+                const amount = document.getElementById('r-amount').value;
+                const mode = document.getElementById('r-mode').value;
+                const period = document.getElementById('r-period').value;
+                const note = document.getElementById('r-note').value;
+                const date = new Date().toLocaleDateString('fr-FR');
+
+                const html = `
+                    <div style="font-family: 'Inter', sans-serif; max-width: 800px; margin: 0 auto; border: 2px solid #000; padding: 40px; position: relative;">
+                        <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px;">
+                            <div>
+                                <h1 style="font-size: 24px; font-weight: bold; margin: 0;">${store.data.profile.fullname}</h1>
+                                <p style="margin: 5px 0;">${store.data.profile.address}</p>
+                                <p style="margin: 0;">Tel: ${store.data.profile.phone}</p>
+                            </div>
+                            <div style="text-align: right;">
+                                <h2 style="font-size: 28px; font-weight: bold; color: #333; margin: 0;">${title}</h2>
+                                <p style="margin-top: 10px;">Date: <strong>${date}</strong></p>
+                                <p>N° Réf: #${paymentId.slice(0,8)}</p>
+                            </div>
+                        </div>
+
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+                            <p style="margin: 5px 0;">Reçu de : <strong>M./Mme ${tenant.lastname} ${tenant.firstname}</strong></p>
+                            <p style="margin: 5px 0;">Pour le bien : <strong>${prop.nickname} - ${prop.address}</strong></p>
+                        </div>
+
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                            <tr style="background: #000; color: #fff;">
+                                <th style="padding: 12px; text-align: left;">Désignation</th>
+                                <th style="padding: 12px; text-align: right;">Montant</th>
+                            </tr>
+                            <tr>
+                                <td style="padding: 15px; border-bottom: 1px solid #ddd;">${period}</td>
+                                <td style="padding: 15px; border-bottom: 1px solid #ddd; text-align: right; font-weight: bold;">${formatCurrency(amount)}</td>
+                            </tr>
+                        </table>
+
+                        <div style="display: flex; justify-content: space-between; margin-top: 40px;">
+                            <div style="width: 60%;">
+                                <p><strong>Mode de règlement:</strong> ${mode}</p>
+                                <p><strong>Note:</strong> ${note}</p>
+                            </div>
+                            <div style="text-align: center; border: 1px dashed #ccc; padding: 20px; width: 150px;">
+                                <p style="margin-bottom: 40px; font-size: 12px; font-weight: bold;">Signature / Cachet</p>
+                                <br>
+                            </div>
+                        </div>
+                        
+                        <div style="position: absolute; bottom: 10px; left: 0; width: 100%; text-align: center; font-size: 10px; color: #999;">
+                            Document généré par G-IMMO le ${new Date().toLocaleString('fr-FR')}
+                        </div>
+                    </div>
+                `;
+
+                const printArea = document.getElementById('receipt-print-area');
+                printArea.innerHTML = html;
+                window.print();
             },
             
             openCreateExpense: () => modal.open('Sortie Bailleur', `<form onsubmit="handlers.createExpense(event)" class="space-y-4"><input name="description" placeholder="Motif" required class="input-clean"><input type="number" name="amount" required class="input-clean"><input type="date" name="date" required value="${new Date().toISOString().split('T')[0]}" class="input-clean"><div><label class="text-xs font-bold text-rose-600 uppercase">Justificatif PDF</label><input type="file" name="file" accept="application/pdf" class="input-clean"></div><button class="btn-brand mt-4 bg-rose-600">Enregistrer Sortie</button></form>`),
@@ -506,41 +737,40 @@
                 const end = new Date(fd.get('end')); end.setHours(23, 59, 59);
 
                 const lines = [];
-                lines.push("Date;Type;Description;Montant");
+                lines.push("Date;Type;Bien;Locataire/Tiers;Description;Montant");
                 
                 store.data.payments.forEach(p => {
                     const d = new Date(p.date);
                     if(d>=start && d<=end) {
                         const l = store.get('leases', p.leaseId);
                         const t = l ? store.get('tenants', l.tenantId) : null;
-                        lines.push(`${formatDate(p.date)};Loyer;${t?t.lastname:''} (${p.period});${p.amount}`);
+                        const prop = l ? store.get('properties', l.propertyId) : null;
+                        lines.push(`${formatDate(p.date)};ENTREE;${prop?prop.nickname:''};${t?t.lastname:''};Loyer ${p.period};${p.amount}`);
                     }
                 });
                 store.data.expenses.forEach(e => {
                      const d = new Date(e.date);
-                    if(d>=start && d<=end) lines.push(`${formatDate(e.date)};Sortie;${e.description};-${e.amount}`);
+                    if(d>=start && d<=end) lines.push(`${formatDate(e.date)};SORTIE;-;-;${e.description};-${e.amount}`);
                 });
                 
                 const blob = new Blob(["\ufeff"+lines.join("\n")], {type: 'text/csv'});
-                saveAs(blob, "transactions.csv");
+                saveAs(blob, `Situation_Bailleur_${start.toISOString().slice(0,10)}.csv`);
             },
             
             backupFull: async () => {
-                loader.show('Génération du Backup...');
+                loader.show('Génération du Backup Complet...');
                 try {
                     const zip = new JSZip();
                     zip.file("data.json", JSON.stringify(store.data));
                     const allFiles = await dbEngine.getAllFiles();
                     
-                    if(allFiles.length > 50 && !confirm(`Attention: ${allFiles.length} fichiers PDF détectés. La sauvegarde peut être longue. Continuer ?`)) {
-                        loader.hide(); return;
+                    if(allFiles.length > 0) {
+                        const folder = zip.folder("documents_pdf");
+                        allFiles.forEach(f => folder.file(`${f.id}.pdf`, f.blob));
                     }
                     
-                    const folder = zip.folder("documents_pdf");
-                    allFiles.forEach(f => folder.file(`${f.id}.pdf`, f.blob));
-                    
                     const content = await zip.generateAsync({type:"blob"});
-                    saveAs(content, `G-IMMO_BACKUP_${new Date().toISOString().slice(0,10)}.zip`);
+                    saveAs(content, `G-IMMO_FULL_BACKUP_${new Date().toISOString().slice(0,10)}.zip`);
                 } catch(e) {
                     alert("Erreur lors du backup: " + e.message);
                 } finally {
@@ -598,6 +828,24 @@
                 store.add('leases', {...Object.fromEntries(fd), status: 'active', contractFileId: fid}); 
                 modal.close(); render(); showToast('Bail créé');
             },
+            updateLease: async (e, id) => {
+                e.preventDefault();
+                const fd = new FormData(e.target);
+                const updates = Object.fromEntries(fd);
+                
+                // Handle file replacement
+                const file = fd.get('file');
+                if(file && file.size > 0) {
+                    const fid = await dbEngine.saveFile(file);
+                    updates.contractFileId = fid;
+                }
+                delete updates.file; // Don't save the file object in JSON store
+
+                store.update('leases', id, updates);
+                modal.close();
+                render();
+                showToast('Bail mis à jour');
+            },
             createPayment: async (e) => {
                 e.preventDefault();
                 const fd = new FormData(e.target);
@@ -610,15 +858,39 @@
                 const sumExisting = existing.reduce((s, p) => s + parseFloat(p.amount), 0);
                 
                 if (sumExisting + amt > parseFloat(lease.rentAmount)) {
-                    alert(`Erreur: Le montant total (${sumExisting + amt}) dépasse le loyer (${lease.rentAmount}).`);
-                    return;
+                    if(!confirm(`Attention: Le montant dépasse le loyer prévu. Continuer ?`)) return;
                 }
                 
                 const file = fd.get('file'); let fid = null;
                 if(file.size > 0) fid = await dbEngine.saveFile(file);
 
-                store.add('payments', {...Object.fromEntries(fd), receiptFileId: fid});
-                modal.close(); render(); showToast('Paiement enregistré');
+                const newId = store.add('payments', {...Object.fromEntries(fd), receiptFileId: fid}).id;
+                modal.close(); 
+                render(); 
+                showToast('Paiement enregistré');
+                
+                // Prompt for receipt generation
+                if(confirm("Voulez-vous générer un reçu maintenant ?")) {
+                    setTimeout(() => actions.openReceiptGenerator(newId), 300);
+                }
+            },
+            updatePayment: async (e, id) => {
+                e.preventDefault();
+                const fd = new FormData(e.target);
+                const updates = Object.fromEntries(fd);
+
+                // Handle file replacement
+                const file = fd.get('file');
+                if(file && file.size > 0) {
+                    const fid = await dbEngine.saveFile(file);
+                    updates.receiptFileId = fid;
+                }
+                delete updates.file;
+
+                store.update('payments', id, updates);
+                modal.close();
+                render();
+                showToast('Paiement mis à jour');
             },
             createExpense: async (e) => { 
                 e.preventDefault(); const fd = new FormData(e.target);
