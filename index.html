@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>G-IMMO | Gestion Complète CI</title>
+    <title>G-IMMO | Mobile Optimized</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
@@ -34,32 +34,33 @@
             .no-print { display: none !important; }
             body { background: white; height: auto; overflow: visible; }
             #receipt-print-area { display: block !important; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; background: white; }
-            #app-screen, #login-screen, #modal-backdrop { display: none; }
+            #app-screen, #login-screen, #modal-backdrop, #mobile-sidebar-backdrop { display: none; }
         }
         .card { @apply bg-white rounded-xl border border-slate-200 shadow-sm transition-all duration-200; }
         .card:hover { @apply shadow-md border-slate-300; }
-        .input-clean { @apply w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 transition-colors; }
-        .btn-brand { @apply text-white bg-brand-600 hover:bg-brand-700 font-medium rounded-lg text-sm px-4 py-2 text-center inline-flex items-center gap-2 transition-colors shadow-sm; }
+        .input-clean { @apply w-full bg-slate-50 border border-slate-200 text-slate-900 text-base rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 transition-colors; } /* Increased padding/text size for touch */
+        .btn-brand { @apply text-white bg-brand-600 hover:bg-brand-700 font-medium rounded-lg text-sm px-4 py-3 text-center inline-flex items-center justify-center gap-2 transition-colors shadow-sm active:scale-95; }
         
         /* Keypad Styles */
-        .keypad-btn { @apply w-20 h-20 rounded-full bg-slate-800 text-white text-2xl font-bold flex items-center justify-center active:bg-brand-600 active:scale-95 transition-all shadow-lg select-none cursor-pointer; }
-        .pin-dot { @apply w-4 h-4 rounded-full border-2 border-slate-400 transition-colors; }
+        .keypad-btn { @apply w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-slate-800 text-white text-xl sm:text-2xl font-bold flex items-center justify-center active:bg-brand-600 active:scale-90 transition-all shadow-lg select-none cursor-pointer tap-highlight-transparent; }
+        .pin-dot { @apply w-3 h-3 sm:w-4 sm:h-4 rounded-full border-2 border-slate-400 transition-colors; }
         .pin-dot.active { @apply bg-brand-500 border-brand-500; }
         .pin-dot.error { @apply bg-rose-500 border-rose-500 animate-pulse; }
+        .tap-highlight-transparent { -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
-<body class="h-full text-slate-800 antialiased overflow-hidden selection:bg-brand-100">
+<body class="h-full text-slate-800 antialiased overflow-hidden selection:bg-brand-100 bg-slate-100">
 
-    <!-- LOGIN SCREEN (TABLET KEYPAD) -->
+    <!-- LOGIN SCREEN (MOBILE OPTIMIZED) -->
     <div id="login-screen" class="fixed inset-0 bg-slate-900 z-[100] flex flex-col items-center justify-center p-4">
-        <div class="mb-8 text-center">
-            <i data-lucide="building-2" class="w-12 h-12 text-brand-500 mx-auto mb-4"></i>
-            <h1 class="text-2xl font-bold text-white tracking-widest">G-IMMO ACCESS</h1>
-            <p class="text-slate-400 text-sm mt-2">Veuillez saisir votre code d'accès</p>
+        <div class="mb-6 sm:mb-8 text-center">
+            <i data-lucide="building-2" class="w-10 h-10 sm:w-12 sm:h-12 text-brand-500 mx-auto mb-3 sm:mb-4"></i>
+            <h1 class="text-xl sm:text-2xl font-bold text-white tracking-widest">G-IMMO</h1>
+            <p class="text-slate-400 text-xs sm:text-sm mt-1">Accès Sécurisé</p>
         </div>
 
         <!-- Pin Dots -->
-        <div class="flex gap-4 mb-10">
+        <div class="flex gap-4 mb-8 sm:mb-10">
             <div id="dot-1" class="pin-dot"></div>
             <div id="dot-2" class="pin-dot"></div>
             <div id="dot-3" class="pin-dot"></div>
@@ -67,7 +68,7 @@
         </div>
 
         <!-- Keypad -->
-        <div class="grid grid-cols-3 gap-6">
+        <div class="grid grid-cols-3 gap-4 sm:gap-6 max-w-xs mx-auto">
             <div class="keypad-btn" onclick="auth.press(1)">1</div>
             <div class="keypad-btn" onclick="auth.press(2)">2</div>
             <div class="keypad-btn" onclick="auth.press(3)">3</div>
@@ -77,103 +78,124 @@
             <div class="keypad-btn" onclick="auth.press(7)">7</div>
             <div class="keypad-btn" onclick="auth.press(8)">8</div>
             <div class="keypad-btn" onclick="auth.press(9)">9</div>
-            <div class="keypad-btn flex items-center justify-center bg-transparent shadow-none active:bg-transparent text-rose-500" onclick="auth.clear()"><i data-lucide="delete" class="w-8 h-8"></i></div>
+            <div class="keypad-btn flex items-center justify-center bg-transparent shadow-none active:bg-transparent text-rose-500" onclick="auth.clear()"><i data-lucide="delete" class="w-6 h-6 sm:w-8 sm:h-8"></i></div>
             <div class="keypad-btn" onclick="auth.press(0)">0</div>
-            <div class="keypad-btn flex items-center justify-center bg-transparent shadow-none active:bg-transparent" onclick="auth.check()"><i data-lucide="arrow-right" class="w-8 h-8 text-emerald-500"></i></div>
+            <div class="keypad-btn flex items-center justify-center bg-transparent shadow-none active:bg-transparent" onclick="auth.check()"><i data-lucide="arrow-right" class="w-8 h-8 sm:w-10 sm:h-10 text-emerald-500"></i></div>
         </div>
-        <p class="mt-8 text-slate-600 text-xs">Version Tablette 2.2</p>
+        <p class="mt-8 text-slate-600 text-[10px] sm:text-xs">Version Mobile 2.3</p>
     </div>
 
     <!-- Notifications -->
-    <div id="toast-container" class="fixed top-5 right-5 z-[60] flex flex-col gap-2 pointer-events-none no-print"></div>
+    <div id="toast-container" class="fixed top-16 right-4 left-4 sm:left-auto sm:right-5 z-[80] flex flex-col gap-2 pointer-events-none no-print"></div>
 
     <!-- App Container -->
     <div id="app-screen" class="flex h-full flex-col md:flex-row hidden opacity-0 transition-opacity duration-500">
         
-        <!-- Sidebar -->
-        <aside id="sidebar" class="bg-sidebar w-full md:w-64 flex-shrink-0 flex flex-col border-r border-slate-800 transition-all duration-300 hidden md:flex no-print h-full z-40 relative">
-            <div class="h-16 flex items-center px-6 bg-slate-900 border-b border-slate-800">
-                <i data-lucide="building-2" class="text-brand-500 mr-3 h-6 w-6"></i>
-                <div>
-                    <h1 class="text-lg font-bold tracking-wide text-white">G-IMMO</h1>
-                    <span class="text-[10px] text-orange-400 font-mono uppercase tracking-wider">Édition CI</span>
+        <!-- Mobile Sidebar Backdrop -->
+        <div id="mobile-sidebar-backdrop" class="fixed inset-0 bg-slate-900/60 z-30 hidden md:hidden transition-opacity backdrop-blur-sm" onclick="ui.closeSidebar()"></div>
+
+        <!-- Sidebar (Drawer on Mobile) -->
+        <aside id="sidebar" class="fixed inset-y-0 left-0 w-72 bg-slate-900 text-white transform -translate-x-full md:translate-x-0 md:static md:w-64 flex flex-col border-r border-slate-800 transition-transform duration-300 z-40 h-full shadow-2xl md:shadow-none">
+            <div class="h-16 flex items-center justify-between px-6 bg-slate-950 border-b border-slate-800 shrink-0">
+                <div class="flex items-center">
+                    <i data-lucide="building-2" class="text-brand-500 mr-3 h-6 w-6"></i>
+                    <div>
+                        <h1 class="text-lg font-bold tracking-wide">G-IMMO</h1>
+                        <span class="text-[10px] text-orange-400 font-mono uppercase tracking-wider">Mobile</span>
+                    </div>
                 </div>
+                <!-- Close button for mobile -->
+                <button onclick="ui.closeSidebar()" class="md:hidden text-slate-400 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
 
             <!-- Recherche Globale -->
-            <div class="px-4 py-4 border-b border-slate-800">
+            <div class="px-4 py-4 border-b border-slate-800 shrink-0">
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                         <i data-lucide="search" class="w-4 h-4 text-slate-500"></i>
                     </div>
-                    <input type="text" id="global-search" placeholder="Chercher un client..." class="bg-slate-800 border border-slate-700 text-slate-300 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block w-full pl-10 p-2 placeholder-slate-500">
+                    <input type="text" id="global-search" placeholder="Chercher client..." class="bg-slate-800 border border-slate-700 text-slate-300 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block w-full pl-10 p-3 placeholder-slate-500">
                 </div>
-                <div id="search-results" class="absolute left-4 right-4 mt-1 bg-white rounded-lg shadow-xl z-50 hidden max-h-60 overflow-y-auto border border-slate-200"></div>
+                <div id="search-results" class="absolute left-4 right-4 mt-1 bg-white rounded-lg shadow-xl z-50 hidden max-h-60 overflow-y-auto border border-slate-200 text-slate-800"></div>
             </div>
 
             <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-                <a href="#" data-view="dashboard" class="nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                <a href="#" data-view="dashboard" class="nav-link group flex items-center px-3 py-3 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
                     <i data-lucide="layout-dashboard" class="mr-3 h-5 w-5 opacity-70"></i> Tableau de bord
                 </a>
 
                 <div class="mt-6 mb-2 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Gestion</div>
-                <a href="#" data-view="properties" class="nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                <a href="#" data-view="properties" class="nav-link group flex items-center px-3 py-3 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
                     <i data-lucide="home" class="mr-3 h-5 w-5 opacity-70"></i> Biens
                 </a>
-                <a href="#" data-view="tenants" class="nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                <a href="#" data-view="tenants" class="nav-link group flex items-center px-3 py-3 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
                     <i data-lucide="users" class="mr-3 h-5 w-5 opacity-70"></i> Locataires
                 </a>
-                <a href="#" data-view="leases" class="nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                <a href="#" data-view="leases" class="nav-link group flex items-center px-3 py-3 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
                     <i data-lucide="file-contract" class="mr-3 h-5 w-5 opacity-70"></i> Baux & Contrats
                 </a>
 
                 <div class="mt-6 mb-2 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Comptabilité</div>
-                <a href="#" data-view="finance" class="nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                <a href="#" data-view="finance" class="nav-link group flex items-center px-3 py-3 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
                     <i data-lucide="banknote" class="mr-3 h-5 w-5 opacity-70"></i> Transactions
                 </a>
-                <a href="#" data-view="reports" class="nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                <a href="#" data-view="reports" class="nav-link group flex items-center px-3 py-3 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
                     <i data-lucide="file-spreadsheet" class="mr-3 h-5 w-5 opacity-70"></i> Bilans & Exports
                 </a>
 
                 <div class="mt-6 mb-2 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Système</div>
-                <a href="#" data-view="settings" class="nav-link group flex items-center px-3 py-2 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
+                <a href="#" data-view="settings" class="nav-link group flex items-center px-3 py-3 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 hover:text-white transition-colors">
                     <i data-lucide="database-backup" class="mr-3 h-5 w-5 opacity-70"></i> Sauvegardes
                 </a>
-                <button onclick="location.reload()" class="mt-10 flex items-center px-3 py-2 text-sm font-medium rounded-md text-rose-400 hover:bg-slate-800 hover:text-white transition-colors w-full">
+                <button onclick="location.reload()" class="mt-auto mb-4 mx-3 flex items-center px-3 py-3 text-sm font-medium rounded-md text-rose-400 border border-rose-900/30 hover:bg-rose-900/20 hover:text-rose-300 transition-colors">
                     <i data-lucide="log-out" class="mr-3 h-5 w-5 opacity-70"></i> Déconnexion
                 </button>
             </nav>
         </aside>
 
         <!-- Main Content -->
-        <main id="main-content" class="flex-1 flex flex-col h-full overflow-hidden bg-slate-50 relative">
-            <div class="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center no-print shadow-md z-30">
-                <span class="font-bold text-lg">G-IMMO CI</span>
-                <button id="mobile-menu-btn" class="p-2 text-slate-300 hover:text-white"><i data-lucide="menu"></i></button>
+        <main id="main-content" class="flex-1 flex flex-col h-full overflow-hidden bg-slate-50 relative w-full">
+            <!-- Mobile Header -->
+            <div class="md:hidden bg-slate-900 text-white px-4 py-3 flex justify-between items-center no-print shadow-md z-30 shrink-0 sticky top-0">
+                <span class="font-bold text-lg flex items-center gap-2"><i data-lucide="building-2" class="w-5 h-5 text-brand-500"></i> G-IMMO</span>
+                <button onclick="ui.openSidebar()" class="p-2 -mr-2 text-slate-300 hover:text-white active:bg-slate-800 rounded-lg"><i data-lucide="menu" class="w-6 h-6"></i></button>
             </div>
             
-            <div id="view-container" class="flex-1 overflow-hidden relative"></div>
+            <div id="view-container" class="flex-1 overflow-y-auto overflow-x-hidden relative scroll-smooth"></div>
         </main>
     </div>
 
-    <!-- Global Modal -->
-    <div id="modal-backdrop" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-opacity no-print">
-        <div id="modal-content" class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all scale-100 max-h-[90vh] overflow-y-auto border border-slate-200"></div>
+    <!-- Global Modal (Mobile Optimized) -->
+    <div id="modal-backdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-0 sm:p-4 transition-opacity no-print">
+        <div id="modal-content" class="bg-white w-full h-full sm:h-auto sm:rounded-xl shadow-2xl sm:max-w-lg overflow-hidden transform transition-all flex flex-col sm:max-h-[90vh]"></div>
     </div>
 
     <!-- Loader Overlay -->
-    <div id="loader" class="fixed inset-0 bg-white/80 z-[70] hidden flex flex-col items-center justify-center no-print">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600"></div>
-        <p class="mt-4 text-slate-600 font-medium" id="loader-text">Traitement...</p>
+    <div id="loader" class="fixed inset-0 bg-white/90 z-[70] hidden flex flex-col items-center justify-center no-print">
+        <div class="animate-spin rounded-full h-12 w-12 border-4 border-brand-100 border-t-brand-600"></div>
+        <p class="mt-4 text-slate-800 font-bold" id="loader-text">Traitement...</p>
     </div>
 
     <!-- HIDDEN PRINT TEMPLATE FOR RECEIPTS -->
-    <div id="receipt-print-area" class="hidden bg-white p-8">
-        <!-- Content injected dynamically -->
-    </div>
+    <div id="receipt-print-area" class="hidden bg-white p-8"></div>
 
     <script>
-        // --- 0. AUTH SYSTEM ---
+        // --- 0. UI HELPERS & AUTH ---
+        const ui = {
+            openSidebar: () => {
+                const sb = document.getElementById('sidebar');
+                const bd = document.getElementById('mobile-sidebar-backdrop');
+                sb.classList.remove('-translate-x-full');
+                bd.classList.remove('hidden');
+            },
+            closeSidebar: () => {
+                const sb = document.getElementById('sidebar');
+                const bd = document.getElementById('mobile-sidebar-backdrop');
+                sb.classList.add('-translate-x-full');
+                bd.classList.add('hidden');
+            }
+        };
+
         const auth = {
             pin: '',
             target: '5008',
@@ -197,19 +219,15 @@
             },
             check: () => {
                 if(auth.pin === auth.target) {
-                    // Success
                     const screen = document.getElementById('login-screen');
                     const app = document.getElementById('app-screen');
                     screen.classList.add('opacity-0', 'pointer-events-none');
                     setTimeout(() => { screen.style.display = 'none'; }, 500);
-                    
                     app.classList.remove('hidden');
-                    // Force reflow
                     void app.offsetWidth;
                     app.classList.remove('opacity-0');
                 } else {
-                    // Error
-                    navigator.vibrate?.(200);
+                    navigator.vibrate?.([50, 50, 50]);
                     for(let i=1; i<=4; i++) document.getElementById(`dot-${i}`).classList.add('error');
                     setTimeout(auth.clear, 500);
                 }
@@ -217,7 +235,6 @@
         };
 
         // --- 1. MOTEUR DE BASE DE DONNÉES ---
-        
         const DB_NAME = 'GImmoCIDB';
         const DB_VERSION = 1;
         const STORE_FILES = 'files';
@@ -267,7 +284,6 @@
         };
 
         // --- 2. STORE ---
-
         const initialState = {
             properties: [],
             tenants: [],
@@ -290,18 +306,12 @@
                 }
             },
             save: () => {
-                if(store.data.logs.length > 500) {
-                    store.data.logs = store.data.logs.slice(0, 500);
-                }
+                if(store.data.logs.length > 500) store.data.logs = store.data.logs.slice(0, 500);
                 try {
                     localStorage.setItem('g_immo_ci_v2_data', JSON.stringify(store.data));
                 } catch(e) {
                     alert("Espace disque saturé. Impossible de sauvegarder.");
                 }
-            },
-            log: (action, details, category = 'info') => {
-                store.data.logs.unshift({ id: crypto.randomUUID(), date: new Date().toISOString(), action, details, category });
-                store.save();
             },
             add: (col, item) => { item.id = crypto.randomUUID(); item.createdAt = new Date().toISOString(); store.data[col].push(item); store.save(); return item; },
             update: (col, id, updates) => { const i = store.data[col].findIndex(x => x.id === id); if(i>-1) { store.data[col][i] = {...store.data[col][i], ...updates}; store.save(); return true; } return false; },
@@ -310,10 +320,8 @@
         };
 
         // --- 3. UTILS ---
-
         const formatCurrency = (n) => new Intl.NumberFormat('fr-FR').format(n || 0) + ' FCFA';
         const formatDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '-';
-        const formatLongDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : '-';
         const escapeHtml = (s) => (s || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         
         const loader = {
@@ -324,8 +332,8 @@
         const showToast = (msg, type = 'success') => {
             const c = document.getElementById('toast-container');
             const d = document.createElement('div');
-            d.className = `${type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'} text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-3 transform transition-all duration-300 translate-x-full max-w-sm pointer-events-auto`;
-            d.innerHTML = `<i data-lucide="${type === 'success' ? 'check-circle' : 'alert-octagon'}" class="w-5 h-5"></i><span class="font-medium text-sm">${msg}</span>`;
+            d.className = `${type === 'success' ? 'bg-emerald-600' : 'bg-rose-600'} text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-3 transform transition-all duration-300 translate-x-full max-w-sm pointer-events-auto shadow-2xl border border-white/10 backdrop-blur-md`;
+            d.innerHTML = `<i data-lucide="${type === 'success' ? 'check-circle' : 'alert-octagon'}" class="w-5 h-5 shrink-0"></i><span class="font-medium text-sm">${msg}</span>`;
             c.appendChild(d);
             lucide.createIcons();
             requestAnimationFrame(() => d.classList.remove('translate-x-full'));
@@ -347,28 +355,31 @@
         };
 
         // --- 4. VUES ---
-
         const router = {
             current: 'dashboard',
             params: {},
             navigate: (view, params = {}) => {
                 router.current = view;
                 router.params = params;
+                ui.closeSidebar(); // Close mobile menu on nav
                 render();
             }
         };
 
         const components = {
             header: (title, subtitle, action = '') => `
-                <header class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 sticky top-0 z-20 shadow-sm no-print">
-                    <div><h2 class="text-xl font-bold text-slate-800">${title}</h2>${subtitle ? `<p class="text-xs text-slate-500 mt-0.5">${subtitle}</p>` : ''}</div>
-                    <div class="flex gap-2">${action}</div>
+                <header class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-20 shadow-sm no-print">
+                    <div class="overflow-hidden">
+                        <h2 class="text-lg sm:text-xl font-bold text-slate-800 truncate">${title}</h2>
+                        ${subtitle ? `<p class="text-xs text-slate-500 mt-0.5 truncate">${subtitle}</p>` : ''}
+                    </div>
+                    <div class="flex gap-2 shrink-0">${action}</div>
                 </header>
             `,
             statusBadge: (status, type='lease') => {
                 if(type === 'lease') {
-                    if(status === 'active') return `<span class="px-2 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">Actif</span>`;
-                    if(status === 'archived') return `<span class="px-2 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500">Clôturé</span>`;
+                    if(status === 'active') return `<span class="px-2 py-1 rounded-full text-[10px] uppercase font-bold bg-emerald-100 text-emerald-800 tracking-wide">Actif</span>`;
+                    if(status === 'archived') return `<span class="px-2 py-1 rounded-full text-[10px] uppercase font-bold bg-slate-100 text-slate-500 tracking-wide">Clôturé</span>`;
                 }
                 return `<span>${status}</span>`;
             }
@@ -379,47 +390,50 @@
                 const activeLeases = store.data.leases.filter(l => l.status === 'active');
                 const income = store.data.payments.reduce((s, p) => s + parseFloat(p.amount), 0);
                 return `
-                    ${components.header('Tableau de Bord', 'Aperçu global de l\'activité')}
-                    <div class="p-6 overflow-y-auto h-full pb-24">
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                             <div class="card p-5 border-l-4 border-l-brand-500"><p class="text-slate-500 text-xs font-bold uppercase">Biens Gérés</p><p class="text-2xl font-bold text-slate-800 mt-1">${store.data.properties.length}</p></div>
-                             <div class="card p-5 border-l-4 border-l-emerald-500"><p class="text-slate-500 text-xs font-bold uppercase">Baux Actifs</p><p class="text-2xl font-bold text-slate-800 mt-1">${activeLeases.length}</p></div>
-                             <div class="card p-5 border-l-4 border-l-indigo-500"><p class="text-slate-500 text-xs font-bold uppercase">Cautions Détenues</p><p class="text-2xl font-bold text-slate-800 mt-1">${formatCurrency(activeLeases.reduce((s,l)=>s+parseFloat(l.depositAmount||0),0))}</p></div>
-                             <div class="card p-5 border-l-4 border-l-rose-500"><p class="text-slate-500 text-xs font-bold uppercase">Revenus</p><p class="text-2xl font-bold text-slate-800 mt-1">${formatCurrency(income)}</p></div>
+                    ${components.header('Tableau de Bord', 'Aperçu global')}
+                    <div class="p-4 sm:p-6 overflow-y-auto h-full pb-24">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                             <div class="card p-4 border-l-4 border-l-brand-500"><p class="text-slate-500 text-[10px] font-bold uppercase">Biens</p><p class="text-xl sm:text-2xl font-bold text-slate-800 mt-1">${store.data.properties.length}</p></div>
+                             <div class="card p-4 border-l-4 border-l-emerald-500"><p class="text-slate-500 text-[10px] font-bold uppercase">Baux</p><p class="text-xl sm:text-2xl font-bold text-slate-800 mt-1">${activeLeases.length}</p></div>
+                             <div class="card p-4 border-l-4 border-l-indigo-500 col-span-2 md:col-span-1"><p class="text-slate-500 text-[10px] font-bold uppercase">Cautions</p><p class="text-xl sm:text-2xl font-bold text-slate-800 mt-1 truncate">${formatCurrency(activeLeases.reduce((s,l)=>s+parseFloat(l.depositAmount||0),0))}</p></div>
+                             <div class="card p-4 border-l-4 border-l-rose-500 col-span-2 md:col-span-1"><p class="text-slate-500 text-[10px] font-bold uppercase">Revenus</p><p class="text-xl sm:text-2xl font-bold text-slate-800 mt-1 truncate">${formatCurrency(income)}</p></div>
                         </div>
-                        <div class="card p-5 bg-gradient-to-br from-brand-900 to-slate-900 text-white">
-                            <h3 class="font-bold mb-2">Actions Rapides</h3>
+                        <div class="card p-5 bg-gradient-to-br from-brand-900 to-slate-900 text-white shadow-lg">
+                            <h3 class="font-bold mb-3">Actions Rapides</h3>
                             <div class="grid grid-cols-2 gap-3">
-                                <button onclick="actions.openAddPayment()" class="bg-white/10 hover:bg-white/20 p-3 rounded-lg text-left transition"><i data-lucide="plus-circle" class="mb-2 w-5 h-5 text-emerald-400"></i><br>Encaisser Loyer</button>
-                                <button onclick="actions.openCreateLease()" class="bg-white/10 hover:bg-white/20 p-3 rounded-lg text-left transition"><i data-lucide="file-plus" class="mb-2 w-5 h-5 text-blue-400"></i><br>Nouveau Bail</button>
+                                <button onclick="actions.openAddPayment()" class="bg-white/10 hover:bg-white/20 p-4 rounded-xl text-left transition active:scale-95"><i data-lucide="plus-circle" class="mb-2 w-6 h-6 text-emerald-400"></i><br><span class="font-semibold">Encaisser</span></button>
+                                <button onclick="actions.openCreateLease()" class="bg-white/10 hover:bg-white/20 p-4 rounded-xl text-left transition active:scale-95"><i data-lucide="file-plus" class="mb-2 w-6 h-6 text-blue-400"></i><br><span class="font-semibold">Nouveau Bail</span></button>
                             </div>
                         </div>
                     </div>`;
             },
             properties: () => { 
-                return `${components.header('Biens', 'Parc Immobilier', `<button onclick="actions.openCreateProperty()" class="btn-brand">Ajouter</button>`)}
-                <div class="p-6 overflow-y-auto h-full pb-24 grid grid-cols-1 md:grid-cols-3 gap-6">
+                return `${components.header('Biens', 'Parc Immobilier', `<button onclick="actions.openCreateProperty()" class="btn-brand shadow-lg text-xs"><i data-lucide="plus" class="w-4 h-4"></i> Ajouter</button>`)}
+                <div class="p-4 sm:p-6 pb-24 grid grid-cols-1 md:grid-cols-3 gap-4">
                     ${store.data.properties.map(p => `
-                    <div class="card p-5">
+                    <div class="card p-5 relative group">
                         <div class="flex justify-between items-start mb-2">
                             <span class="bg-slate-100 text-slate-600 text-[10px] uppercase font-bold px-2 py-1 rounded tracking-wide">${escapeHtml(p.type)}</span>
-                            <button onclick="actions.deleteItem('properties','${p.id}','Bien')" class="text-rose-500 hover:text-rose-700"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            <button onclick="actions.deleteItem('properties','${p.id}','Bien')" class="p-2 -m-2 text-rose-300 hover:text-rose-600 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                         </div>
-                        <h3 class="font-bold text-lg">${escapeHtml(p.nickname)}</h3>
-                        <p class="text-sm text-slate-500 flex items-center gap-1 mt-1"><i data-lucide="map-pin" class="w-3 h-3"></i> ${escapeHtml(p.address)}</p>
+                        <h3 class="font-bold text-lg text-slate-800">${escapeHtml(p.nickname)}</h3>
+                        <p class="text-sm text-slate-500 flex items-start gap-1 mt-1"><i data-lucide="map-pin" class="w-3 h-3 mt-0.5 shrink-0"></i> <span class="truncate-2-lines">${escapeHtml(p.address)}</span></p>
                     </div>`).join('')}
                 </div>`; 
             },
             tenants: () => { 
-                return `${components.header('Locataires', 'Répertoire Clients', `<button onclick="actions.openCreateTenant()" class="btn-brand">Ajouter</button>`)}
-                <div class="p-6 overflow-y-auto h-full pb-24 space-y-2">
+                return `${components.header('Locataires', 'Répertoire', `<button onclick="actions.openCreateTenant()" class="btn-brand shadow-lg text-xs"><i data-lucide="plus" class="w-4 h-4"></i> Ajouter</button>`)}
+                <div class="p-4 sm:p-6 pb-24 space-y-3">
                     ${store.data.tenants.map(t => `
-                    <div class="card p-4 flex justify-between cursor-pointer hover:bg-slate-50" onclick="router.navigate('tenantDetail', {id: '${t.id}'})">
-                        <div>
-                            <p class="font-bold">${escapeHtml(t.lastname)} ${escapeHtml(t.firstname)}</p>
-                            <p class="text-xs text-slate-500">${escapeHtml(t.phone)}</p>
+                    <div class="card p-4 flex justify-between items-center cursor-pointer hover:bg-slate-50 active:bg-slate-100" onclick="router.navigate('tenantDetail', {id: '${t.id}'})">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center font-bold text-sm shrink-0">${t.lastname.charAt(0)}${t.firstname.charAt(0)}</div>
+                            <div>
+                                <p class="font-bold text-slate-900">${escapeHtml(t.lastname)} ${escapeHtml(t.firstname)}</p>
+                                <p class="text-xs text-slate-500">${escapeHtml(t.phone)}</p>
+                            </div>
                         </div>
-                        <i data-lucide="chevron-right" class="text-slate-400"></i>
+                        <i data-lucide="chevron-right" class="text-slate-400 w-5 h-5"></i>
                     </div>`).join('')}
                 </div>`; 
             },
@@ -429,20 +443,24 @@
                 const leases = store.data.leases.filter(l => l.tenantId === t.id);
                 const activeLease = leases.find(l => l.status === 'active');
                 
-                return `${components.header(t.lastname, 'Fiche client complète', `<button onclick="router.navigate('tenants')" class="text-sm border px-3 py-1 rounded bg-white">Retour</button>`)}
-                <div class="p-6 overflow-y-auto h-full pb-24 space-y-6">
-                    <div class="card p-6 flex justify-between items-center">
-                        <div>
-                            <h3 class="text-xl font-bold text-slate-900">${t.firstname} ${t.lastname}</h3>
-                            <p class="text-slate-500">${t.phone}</p>
+                return `${components.header(t.lastname, 'Détail', `<button onclick="router.navigate('tenants')" class="text-xs border px-3 py-2 rounded-lg bg-white shadow-sm flex items-center gap-1"><i data-lucide="arrow-left" class="w-3 h-3"></i> Retour</button>`)}
+                <div class="p-4 sm:p-6 pb-24 space-y-6">
+                    <div class="card p-5">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div>
+                                <h3 class="text-xl font-bold text-slate-900">${t.firstname} ${t.lastname}</h3>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="bg-brand-50 text-brand-700 px-2 py-0.5 rounded text-xs font-mono">${t.phone}</span>
+                                </div>
+                            </div>
+                            ${activeLease ? 
+                                `<button onclick="actions.closeLease('${activeLease.id}')" class="w-full sm:w-auto text-rose-600 bg-rose-50 border border-rose-200 active:bg-rose-100 px-4 py-2 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors"><i data-lucide="user-x" class="w-4 h-4"></i> Signaler Départ</button>` 
+                                : '<span class="text-slate-400 text-sm italic">Aucun bail actif</span>'}
                         </div>
-                        ${activeLease ? 
-                            `<button onclick="actions.closeLease('${activeLease.id}')" class="text-rose-600 border border-rose-200 hover:bg-rose-50 px-3 py-1.5 rounded text-sm flex gap-2"><i data-lucide="user-x" class="w-4 h-4"></i> Signaler Départ</button>` 
-                            : '<span class="text-slate-400 text-sm">Aucun bail actif</span>'}
                     </div>
                     
                     <div>
-                        <h4 class="font-bold text-slate-500 text-sm uppercase mb-2">Historique des Baux</h4>
+                        <h4 class="font-bold text-slate-500 text-xs uppercase tracking-wider mb-3 px-1">Historique des Baux</h4>
                         ${leases.map(l => views.renderLeaseCard(l, l.status === 'active')).join('')}
                     </div>
                 </div>`;
@@ -450,123 +468,128 @@
             renderLeaseCard: (lease, isActive) => {
                 const prop = store.get('properties', lease.propertyId);
                 const payments = store.data.payments.filter(p => p.leaseId === lease.id).sort((a,b) => b.date.localeCompare(a.date));
-                return `<div class="card p-4 mb-4 ${isActive?'border-brand-500 ring-1 ring-brand-100': 'opacity-75 bg-slate-50'}">
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="flex-1">
-                            <p class="font-bold text-lg">${prop?.nickname}</p>
+                return `<div class="card overflow-hidden mb-4 ${isActive?'border-brand-500 ring-1 ring-brand-100': 'opacity-80 bg-slate-50'}">
+                    <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-start">
+                        <div>
+                            <p class="font-bold text-lg text-slate-800">${prop?.nickname}</p>
+                            <p class="text-xs text-slate-500 mt-0.5">Loyer: ${formatCurrency(lease.rentAmount)} • Caution: ${formatCurrency(lease.depositAmount)}</p>
+                        </div>
+                        <div class="flex flex-col items-end gap-2">
                             ${components.statusBadge(lease.status)}
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="actions.editLease('${lease.id}')" title="Modifier le Bail" class="text-slate-400 hover:text-brand-600 p-1"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                            <button onclick="actions.editLease('${lease.id}')" class="p-2 text-slate-400 hover:text-brand-600 bg-white border border-slate-200 rounded-full shadow-sm"><i data-lucide="edit-2" class="w-3 h-3"></i></button>
                         </div>
                     </div>
-                    <div class="flex gap-4 text-sm mb-4">
-                        <span>Loyer: <strong>${formatCurrency(lease.rentAmount)}</strong></span>
-                        <span>Caution: <strong>${formatCurrency(lease.depositAmount)}</strong></span>
-                    </div>
-                    ${lease.contractFileId ? `<button onclick="actions.viewFile('${lease.contractFileId}')" class="text-xs text-brand-600 mb-4 flex gap-1"><i data-lucide="file-text" class="w-3 h-3"></i> Voir Contrat PDF</button>` : ''}
+                    ${lease.contractFileId ? `<div class="bg-brand-50/50 px-4 py-2 border-b border-brand-100"><button onclick="actions.viewFile('${lease.contractFileId}')" class="text-xs text-brand-700 font-medium flex items-center gap-2"><i data-lucide="file-text" class="w-3 h-3"></i> Voir le contrat scanné</button></div>` : ''}
                     
-                    <div class="bg-slate-50 rounded p-2">
-                        <p class="text-xs font-bold text-slate-400 uppercase mb-2">Paiements & Reçus</p>
+                    <div class="p-2">
+                        <div class="flex justify-between items-center px-2 py-2">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Paiements</p>
+                        </div>
+                        <div class="space-y-1">
                         ${payments.map(p => {
                             const st = getPaymentStatus(lease, p.period);
-                            return `<div class="flex justify-between items-center text-sm border-b border-slate-200 pb-2 mb-2 last:border-0 last:pb-0">
+                            return `<div class="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-100 shadow-sm">
                                 <div>
-                                    <div class="font-mono text-slate-600">${p.period}</div>
-                                    <div class="font-bold">${formatCurrency(p.amount)}</div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-mono text-sm font-bold text-slate-700">${p.period}</span>
+                                        <span class="text-[10px] px-1.5 py-0.5 rounded ${st.color}">${st.label}</span>
+                                    </div>
+                                    <div class="text-xs text-slate-500 mt-0.5">${formatCurrency(p.amount)}</div>
                                 </div>
-                                <div class="flex gap-2 items-center">
-                                    <button onclick="actions.editPayment('${p.id}')" title="Modifier le paiement" class="bg-slate-100 hover:bg-amber-100 hover:text-amber-700 text-slate-600 p-2 rounded-full transition-colors"><i data-lucide="pencil" class="w-3 h-3"></i></button>
-                                    <button onclick="actions.openReceiptGenerator('${p.id}')" title="Générer Reçu Flexible" class="bg-slate-100 hover:bg-brand-100 hover:text-brand-600 text-slate-600 p-2 rounded-full transition-colors">
-                                        <i data-lucide="printer" class="w-4 h-4"></i>
-                                    </button>
-                                    ${p.receiptFileId ? `<button onclick="actions.viewFile('${p.receiptFileId}')" class="bg-slate-100 hover:bg-emerald-100 hover:text-emerald-600 text-slate-600 p-2 rounded-full transition-colors"><i data-lucide="file-check" class="w-4 h-4"></i></button>` : ''}
-                                    <button onclick="actions.deletePayment('${p.id}')" title="Supprimer le paiement" class="bg-slate-100 hover:bg-rose-100 hover:text-rose-600 text-slate-600 p-2 rounded-full transition-colors"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+                                <div class="flex gap-2">
+                                    <button onclick="actions.editPayment('${p.id}')" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 active:bg-slate-200"><i data-lucide="pencil" class="w-3 h-3"></i></button>
+                                    <button onclick="actions.openReceiptGenerator('${p.id}')" class="w-8 h-8 flex items-center justify-center rounded-full bg-brand-50 text-brand-600 active:bg-brand-100"><i data-lucide="printer" class="w-3 h-3"></i></button>
+                                    ${p.receiptFileId ? `<button onclick="actions.viewFile('${p.receiptFileId}')" class="w-8 h-8 flex items-center justify-center rounded-full bg-emerald-50 text-emerald-600 active:bg-emerald-100"><i data-lucide="file-check" class="w-3 h-3"></i></button>` : ''}
+                                    <button onclick="actions.deletePayment('${p.id}')" class="w-8 h-8 flex items-center justify-center rounded-full bg-rose-50 text-rose-600 active:bg-rose-100"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
                                 </div>
                             </div>`
                         }).join('')}
-                        ${payments.length === 0 ? '<p class="text-xs text-slate-400 italic">Aucun paiement</p>' : ''}
+                        </div>
+                        ${payments.length === 0 ? '<div class="p-4 text-center text-xs text-slate-400 italic bg-slate-50 rounded mx-2 mb-2">Aucun historique</div>' : ''}
                     </div>
                 </div>`;
             },
-            leases: () => { return `${components.header('Baux Actifs', 'Contrats en cours', `<button onclick="actions.openCreateLease()" class="btn-brand">Nouveau</button>`)}<div class="p-6 overflow-y-auto h-full pb-24 space-y-3">${store.data.leases.filter(l=>l.status==='active').map(l => {
+            leases: () => { return `${components.header('Baux', 'Contrats en cours', `<button onclick="actions.openCreateLease()" class="btn-brand shadow-lg text-xs"><i data-lucide="plus" class="w-4 h-4"></i> Nouveau</button>`)}<div class="p-4 sm:p-6 pb-24 space-y-3">${store.data.leases.filter(l=>l.status==='active').map(l => {
                 const p = store.get('properties', l.propertyId);
                 const t = store.get('tenants', l.tenantId);
-                return `<div class="card p-4 flex justify-between items-center">
+                return `<div class="card p-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                     <div>
-                        <p class="font-bold">${t?.lastname} ${t?.firstname}</p>
-                        <p class="text-sm text-slate-500">${p?.nickname} - ${formatCurrency(l.rentAmount)}</p>
+                        <p class="font-bold text-slate-900">${t?.lastname} ${t?.firstname}</p>
+                        <p class="text-sm text-slate-500">${p?.nickname} • <span class="font-mono text-slate-700">${formatCurrency(l.rentAmount)}</span></p>
                     </div>
-                    <button onclick="actions.openAddPayment('${l.id}')" class="text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-3 py-1 rounded text-xs font-bold">Payer</button>
+                    <button onclick="actions.openAddPayment('${l.id}')" class="w-full sm:w-auto text-emerald-700 bg-emerald-100 active:bg-emerald-200 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors text-center">Encaisser</button>
                 </div>`;
             }).join('')}</div>`; },
-            finance: () => { return `${components.header('Finance', 'Sorties Bailleurs', `<button onclick="actions.openCreateExpense()" class="btn-brand bg-rose-600">Sortie</button>`)}<div class="p-6 overflow-y-auto h-full pb-24 space-y-2">${store.data.expenses.map(e => `<div class="card p-4 flex justify-between"><p>${escapeHtml(e.description)} <span class="text-xs text-slate-400 block">${formatDate(e.date)}</span></p><div class="text-right"><p class="text-rose-600 font-bold">-${formatCurrency(e.amount)}</p>${e.fileId?`<button onclick="actions.viewFile('${e.fileId}')" class="text-xs text-brand-600 underline">Justificatif</button>`:''}</div></div>`).join('')}</div>`; },
+            finance: () => { return `${components.header('Finance', 'Sorties', `<button onclick="actions.openCreateExpense()" class="btn-brand bg-rose-600 hover:bg-rose-700 text-xs"><i data-lucide="minus" class="w-4 h-4"></i> Sortie</button>`)}<div class="p-4 sm:p-6 pb-24 space-y-3">${store.data.expenses.map(e => `<div class="card p-4 flex justify-between items-center"><div class="overflow-hidden mr-3"><p class="font-medium text-slate-900 truncate">${escapeHtml(e.description)}</p><span class="text-xs text-slate-400 block">${formatDate(e.date)}</span></div><div class="text-right shrink-0"><p class="text-rose-600 font-bold text-lg">-${formatCurrency(e.amount)}</p>${e.fileId?`<button onclick="actions.viewFile('${e.fileId}')" class="text-[10px] text-brand-600 bg-brand-50 px-2 py-1 rounded mt-1">Justificatif</button>`:''}</div></div>`).join('')}</div>`; },
             reports: () => `
-                ${components.header('Bilans & Exports', 'Situation Complète du Bailleur')}
-                <div class="p-6 overflow-y-auto h-full pb-24 max-w-3xl mx-auto space-y-6">
-                    <div class="card p-6 border-l-4 border-indigo-500">
-                        <h3 class="font-bold text-slate-800 text-lg">Situation Financière (CSV)</h3>
-                        <p class="text-sm text-slate-500 mb-4">Génère un tableau complet de tous les flux pour Excel.</p>
-                        <form onsubmit="actions.exportTransactions(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100 mt-4">
-                            <div><label class="text-xs font-bold text-slate-500 uppercase">Date Début</label><input type="date" name="start" required class="input-clean"></div>
-                            <div><label class="text-xs font-bold text-slate-500 uppercase">Date Fin</label><input type="date" name="end" required class="input-clean"></div>
-                            <div class="md:col-span-2 text-right"><button type="submit" class="btn-brand bg-indigo-600 hover:bg-indigo-700">Générer Rapport CSV</button></div>
+                ${components.header('Exports', 'Données')}
+                <div class="p-4 sm:p-6 pb-24 max-w-3xl mx-auto space-y-6">
+                    <div class="card p-5 border-l-4 border-indigo-500">
+                        <h3 class="font-bold text-slate-800 text-lg mb-1">Rapport Financier</h3>
+                        <p class="text-xs text-slate-500 mb-4">Export CSV pour Excel</p>
+                        <form onsubmit="actions.exportTransactions(event)" class="grid grid-cols-1 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
+                            <div><label class="text-xs font-bold text-slate-500 uppercase mb-1 block">Du</label><input type="date" name="start" required class="input-clean bg-white"></div>
+                            <div><label class="text-xs font-bold text-slate-500 uppercase mb-1 block">Au</label><input type="date" name="end" required class="input-clean bg-white"></div>
+                            <button type="submit" class="btn-brand bg-indigo-600 hover:bg-indigo-700 w-full mt-2">Générer CSV</button>
                         </form>
                     </div>
                 </div>`,
             settings: () => `
-                ${components.header('Sauvegarde', 'Sécurité')}
-                <div class="p-6 overflow-y-auto h-full pb-24 max-w-2xl mx-auto space-y-6">
+                ${components.header('Backup', 'Données')}
+                <div class="p-4 sm:p-6 pb-24 max-w-2xl mx-auto space-y-6">
                     <div class="card p-6 border-l-4 border-brand-500">
-                        <h3 class="font-bold mb-2 text-lg">Sauvegarde Complète (ZIP)</h3>
-                        <p class="text-sm text-slate-500 mb-4">Télécharge l'historique client et tous les documents.</p>
+                        <h3 class="font-bold mb-2 text-lg">Sauvegarde (ZIP)</h3>
+                        <p class="text-sm text-slate-500 mb-4">Base de données + Fichiers PDF</p>
                         <button onclick="actions.backupFull()" class="btn-brand w-full py-3">Télécharger Backup</button>
                     </div>
                     <div class="card p-6 border-l-4 border-amber-500">
-                        <h3 class="font-bold mb-2 text-lg">Restauration Système</h3>
-                        <p class="text-sm text-slate-500 mb-4">Importez un fichier .zip pour restaurer le système.</p>
+                        <h3 class="font-bold mb-2 text-lg">Restaurer</h3>
+                        <p class="text-sm text-slate-500 mb-4">Depuis un fichier .zip</p>
                         <input type="file" id="restore-file" accept=".zip" class="block w-full text-sm mb-4 bg-slate-50 p-2 rounded border"/>
                         <button onclick="actions.restoreFull()" class="btn-brand bg-amber-600 w-full hover:bg-amber-700">Restaurer</button>
                     </div>
-                    <div class="text-center mt-8">
-                        <button onclick="if(confirm('Tout effacer ? Action irréversible.')) { localStorage.removeItem('g_immo_ci_v2_data'); dbEngine.clearFiles().then(() => location.reload()); }" class="text-rose-500 text-sm hover:underline">Réinitialiser l'application</button>
+                    <div class="text-center mt-8 pb-8">
+                        <button onclick="if(confirm('Tout effacer ? Action irréversible.')) { localStorage.removeItem('g_immo_ci_v2_data'); dbEngine.clearFiles().then(() => location.reload()); }" class="text-rose-500 text-sm hover:underline p-4">Réinitialiser l'application</button>
                     </div>
                 </div>`
         };
 
         // --- 5. ACTIONS & HANDLERS ---
-
         const actions = {
             openCreateProperty: () => modal.open('Nouveau Bien', `
-                <form onsubmit="handlers.createProperty(event)" class="space-y-4">
-                    <div><label class="text-xs font-bold text-slate-500 uppercase">Nom</label><input name="nickname" required class="input-clean" placeholder="Ex: Villa Cocody"></div>
-                    <div><label class="text-xs font-bold text-slate-500 uppercase">Adresse</label><input name="address" required class="input-clean"></div>
-                    <div><label class="text-xs font-bold text-slate-500 uppercase">Type</label>
-                        <select name="type" class="input-clean">
-                            <option>Appartement</option><option>Villa</option><option>Studio</option><option>Bureau</option><option>Magasin</option><option>Penthouse</option>
-                        </select>
+                <form onsubmit="handlers.createProperty(event)" class="flex flex-col h-full sm:h-auto">
+                    <div class="space-y-4 flex-1 overflow-y-auto p-1">
+                        <div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Nom</label><input name="nickname" required class="input-clean" placeholder="Ex: Villa Cocody"></div>
+                        <div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Adresse</label><input name="address" required class="input-clean"></div>
+                        <div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Type</label>
+                            <select name="type" class="input-clean">
+                                <option>Appartement</option><option>Villa</option><option>Studio</option><option>Bureau</option><option>Magasin</option>
+                            </select>
+                        </div>
                     </div>
-                    <button class="btn-brand mt-4 w-full">Créer</button>
+                    <button class="btn-brand mt-4 w-full shadow-lg">Créer le Bien</button>
                 </form>`),
             
-            openCreateTenant: () => modal.open('Nouveau Locataire', `<form onsubmit="handlers.createTenant(event)" class="space-y-4"><div><label class="text-xs font-bold text-slate-500 uppercase">Nom</label><input name="lastname" required class="input-clean"></div><div><label class="text-xs font-bold text-slate-500 uppercase">Prénom</label><input name="firstname" required class="input-clean"></div><div><label class="text-xs font-bold text-slate-500 uppercase">Téléphone</label><input name="phone" required class="input-clean"></div><button class="btn-brand mt-4 w-full">Créer</button></form>`),
+            openCreateTenant: () => modal.open('Nouveau Locataire', `<form onsubmit="handlers.createTenant(event)" class="space-y-4"><div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Nom</label><input name="lastname" required class="input-clean"></div><div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Prénom</label><input name="firstname" required class="input-clean"></div><div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Téléphone</label><input name="phone" type="tel" required class="input-clean"></div><button class="btn-brand mt-4 w-full shadow-lg">Créer le Client</button></form>`),
             
             openCreateLease: () => {
-                const props = store.data.properties.map(p => `<option value="${p.id}">${escapeHtml(p.nickname)} (${p.type})</option>`).join('');
+                const props = store.data.properties.map(p => `<option value="${p.id}">${escapeHtml(p.nickname)}</option>`).join('');
                 const tens = store.data.tenants.map(t => `<option value="${t.id}">${escapeHtml(t.lastname)} ${escapeHtml(t.firstname)}</option>`).join('');
-                if(!props || !tens) return showToast('Créez d\'abord un bien et un locataire', 'error');
+                if(!props || !tens) return showToast('Créez d\'abord un bien et un client', 'error');
                 
                 modal.open('Nouveau Bail', `
-                <form onsubmit="handlers.createLease(event)" class="space-y-4">
-                    <div><label class="text-xs font-bold text-slate-500 uppercase">Bien</label><select name="propertyId" class="input-clean">${props}</select></div>
-                    <div><label class="text-xs font-bold text-slate-500 uppercase">Locataire</label><select name="tenantId" class="input-clean">${tens}</select></div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div><label class="text-xs font-bold text-slate-500 uppercase">Loyer</label><input type="number" name="rentAmount" required class="input-clean"></div>
-                        <div><label class="text-xs font-bold text-slate-500 uppercase">Caution</label><input type="number" name="depositAmount" required class="input-clean"></div>
+                <form onsubmit="handlers.createLease(event)" class="flex flex-col h-full sm:h-auto">
+                    <div class="space-y-4 flex-1 overflow-y-auto p-1">
+                        <div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Bien</label><select name="propertyId" class="input-clean">${props}</select></div>
+                        <div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Locataire</label><select name="tenantId" class="input-clean">${tens}</select></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Loyer</label><input type="number" name="rentAmount" required class="input-clean"></div>
+                            <div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Caution</label><input type="number" name="depositAmount" required class="input-clean"></div>
+                        </div>
+                        <div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Date Entrée</label><input type="date" name="startDate" required class="input-clean bg-white"></div>
+                        <div><label class="text-xs font-bold text-brand-600 uppercase block mb-1">Contrat PDF (Scan)</label><input type="file" name="file" accept="application/pdf" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 transition-colors"></div>
                     </div>
-                    <div><label class="text-xs font-bold text-slate-500 uppercase">Date Entrée</label><input type="date" name="startDate" required class="input-clean"></div>
-                    <div><label class="text-xs font-bold text-brand-600 uppercase">Contrat PDF (Scan)</label><input type="file" name="file" accept="application/pdf" class="input-clean"></div>
-                    <button class="btn-brand mt-4 w-full">Valider le Bail</button>
+                    <button class="btn-brand mt-4 w-full shadow-lg">Valider le Bail</button>
                 </form>`);
             },
             
@@ -575,30 +598,29 @@
                 if(!lease) return;
                 modal.open('Modifier le Bail', `
                 <form onsubmit="handlers.updateLease(event, '${id}')" class="space-y-4">
-                     <p class="text-xs text-amber-600 bg-amber-50 p-2 rounded">Attention : Les modifications impactent l'historique.</p>
+                     <p class="text-xs text-amber-700 bg-amber-50 p-3 rounded-lg border border-amber-100 flex gap-2"><i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i> Modification historique.</p>
                      <div class="grid grid-cols-2 gap-4">
-                        <div><label class="text-xs font-bold text-slate-500 uppercase">Loyer</label><input type="number" name="rentAmount" value="${lease.rentAmount}" required class="input-clean"></div>
-                        <div><label class="text-xs font-bold text-slate-500 uppercase">Caution</label><input type="number" name="depositAmount" value="${lease.depositAmount}" required class="input-clean"></div>
+                        <div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Loyer</label><input type="number" name="rentAmount" value="${lease.rentAmount}" required class="input-clean"></div>
+                        <div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Caution</label><input type="number" name="depositAmount" value="${lease.depositAmount}" required class="input-clean"></div>
                     </div>
-                    <div><label class="text-xs font-bold text-slate-500 uppercase">Date Entrée</label><input type="date" name="startDate" value="${lease.startDate}" required class="input-clean"></div>
-                    <div><label class="text-xs font-bold text-brand-600 uppercase">Remplacer Contrat PDF (Optionnel)</label><input type="file" name="file" accept="application/pdf" class="input-clean"></div>
-                    <button class="btn-brand mt-4 w-full bg-amber-600 hover:bg-amber-700">Enregistrer Modifications</button>
+                    <div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Date Entrée</label><input type="date" name="startDate" value="${lease.startDate}" required class="input-clean bg-white"></div>
+                    <div><label class="text-xs font-bold text-brand-600 uppercase block mb-1">Remplacer PDF</label><input type="file" name="file" accept="application/pdf" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-50 file:text-brand-700"></div>
+                    <button class="btn-brand mt-4 w-full bg-amber-600 hover:bg-amber-700 shadow-lg">Enregistrer</button>
                 </form>`);
             },
 
             editPayment: (id) => {
                 const p = store.get('payments', id);
                 if(!p) return;
-                modal.open('Modifier le Paiement', `
+                modal.open('Modifier Paiement', `
                 <form onsubmit="handlers.updatePayment(event, '${id}')" class="space-y-4">
-                    <p class="text-xs text-amber-600 bg-amber-50 p-2 rounded">Modification d'une écriture comptable.</p>
-                    <div><label class="text-xs font-bold text-slate-500 uppercase">Période</label><input type="month" name="period" value="${p.period}" required class="input-clean"></div>
+                    <div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Période</label><input type="month" name="period" value="${p.period}" required class="input-clean bg-white"></div>
                     <div class="grid grid-cols-2 gap-4">
-                        <div><label class="text-xs font-bold text-slate-500 uppercase">Montant</label><input type="number" name="amount" value="${p.amount}" required class="input-clean"></div>
-                        <div><label class="text-xs font-bold text-slate-500 uppercase">Date</label><input type="date" name="date" value="${p.date.split('T')[0]}" required class="input-clean"></div>
+                        <div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Montant</label><input type="number" name="amount" value="${p.amount}" required class="input-clean"></div>
+                        <div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Date</label><input type="date" name="date" value="${p.date.split('T')[0]}" required class="input-clean bg-white"></div>
                     </div>
-                    <div><label class="text-xs font-bold text-emerald-600 uppercase">Remplacer Reçu PDF (Optionnel)</label><input type="file" name="file" accept="application/pdf" class="input-clean"></div>
-                    <button class="btn-brand mt-4 w-full bg-amber-600 hover:bg-amber-700">Mettre à jour</button>
+                    <div><label class="text-xs font-bold text-emerald-600 uppercase block mb-1">Remplacer Reçu</label><input type="file" name="file" accept="application/pdf" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700"></div>
+                    <button class="btn-brand mt-4 w-full bg-amber-600 hover:bg-amber-700 shadow-lg">Mettre à jour</button>
                 </form>`);
             },
 
@@ -612,21 +634,21 @@
                     return `<option value="${l.id}" ${l.id===pid?'selected':''}>${t.lastname} - ${p.nickname} (${formatCurrency(l.rentAmount)})</option>`;
                 }).join('');
                 
-                modal.open('Encaisser Loyer', `
-                <form onsubmit="handlers.createPayment(event)" class="space-y-4">
-                    <div><label class="text-xs font-bold text-slate-500 uppercase">Bail</label><select name="leaseId" class="input-clean">${opts}</select></div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div><label class="text-xs font-bold text-slate-500 uppercase">Période</label><input type="month" name="period" required class="input-clean"></div>
-                        <div><label class="text-xs font-bold text-slate-500 uppercase">Montant</label><input type="number" name="amount" required class="input-clean"></div>
+                modal.open('Encaisser', `
+                <form onsubmit="handlers.createPayment(event)" class="flex flex-col h-full sm:h-auto">
+                    <div class="space-y-4 flex-1 overflow-y-auto p-1">
+                        <div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Bail</label><select name="leaseId" class="input-clean">${opts}</select></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Période</label><input type="month" name="period" required class="input-clean bg-white"></div>
+                            <div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Montant</label><input type="number" name="amount" required class="input-clean"></div>
+                        </div>
+                        <div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Date</label><input type="date" name="date" required value="${new Date().toISOString().split('T')[0]}" class="input-clean bg-white"></div>
+                        <div><label class="text-xs font-bold text-emerald-600 uppercase block mb-1">Scan Reçu (Optionnel)</label><input type="file" name="file" accept="application/pdf" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 transition-colors"></div>
                     </div>
-                    <div><label class="text-xs font-bold text-slate-500 uppercase">Date</label><input type="date" name="date" required value="${new Date().toISOString().split('T')[0]}" class="input-clean"></div>
-                    <div><label class="text-xs font-bold text-emerald-600 uppercase">Reçu PDF (Scan Optionnel)</label><input type="file" name="file" accept="application/pdf" class="input-clean"></div>
-                    <p class="text-xs text-slate-500 italic">Astuce: Vous pourrez générer un reçu imprimable après l'enregistrement.</p>
-                    <button class="btn-brand mt-4 w-full bg-emerald-600 hover:bg-emerald-700">Payer</button>
+                    <button class="btn-brand mt-4 w-full bg-emerald-600 hover:bg-emerald-700 shadow-lg">Enregistrer Paiement</button>
                 </form>`);
             },
             
-            // --- NEW: GENERATEUR DE REÇU FLEXIBLE ---
             openReceiptGenerator: (paymentId) => {
                 const payment = store.get('payments', paymentId);
                 const lease = store.get('leases', payment.leaseId);
@@ -634,31 +656,26 @@
                 const prop = store.get('properties', lease.propertyId);
                 const profile = store.data.profile;
 
-                // Formulaire de pré-configuration flexible
                 modal.open('Générer Reçu', `
-                    <div class="space-y-4">
-                        <p class="text-sm text-slate-500">Modifiez les informations ci-dessous avant l'impression.</p>
-                        <form id="receipt-config-form" class="space-y-3">
-                            <!-- Section Emetteur -->
-                            <div class="bg-slate-100 p-3 rounded border border-slate-200">
-                                <p class="text-xs font-bold text-slate-500 uppercase mb-2">Émetteur (Bailleur / Agence)</p>
+                    <div class="flex flex-col h-full sm:h-auto">
+                        <div class="space-y-3 flex-1 overflow-y-auto p-1">
+                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                                <p class="text-xs font-bold text-slate-500 uppercase mb-2">Émetteur</p>
                                 <div class="space-y-2">
-                                    <input id="r-sender-name" value="${profile.fullname}" class="input-clean" placeholder="Nom">
-                                    <input id="r-sender-address" value="${profile.address}" class="input-clean" placeholder="Adresse">
-                                    <input id="r-sender-phone" value="${profile.phone}" class="input-clean" placeholder="Téléphone">
+                                    <input id="r-sender-name" value="${profile.fullname}" class="input-clean py-2 text-sm" placeholder="Nom">
+                                    <input id="r-sender-address" value="${profile.address}" class="input-clean py-2 text-sm" placeholder="Adresse">
+                                    <input id="r-sender-phone" value="${profile.phone}" class="input-clean py-2 text-sm" placeholder="Téléphone">
                                 </div>
                             </div>
-
-                            <!-- Section Transaction -->
-                            <div><label class="text-xs font-bold text-slate-500 uppercase">Titre du Document</label><input id="r-title" value="QUITTANCE DE LOYER" class="input-clean font-bold"></div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div><label class="text-xs font-bold text-slate-500 uppercase">Montant</label><input id="r-amount" value="${payment.amount}" class="input-clean"></div>
-                                <div><label class="text-xs font-bold text-slate-500 uppercase">Mode</label><input id="r-mode" value="Espèces" class="input-clean"></div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Montant</label><input id="r-amount" value="${payment.amount}" class="input-clean"></div>
+                                <div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Mode</label><input id="r-mode" value="Espèces" class="input-clean"></div>
                             </div>
-                            <div><label class="text-xs font-bold text-slate-500 uppercase">Période / Motif</label><input id="r-period" value="Loyer de ${payment.period}" class="input-clean"></div>
-                            <div><label class="text-xs font-bold text-slate-500 uppercase">Note Libre</label><textarea id="r-note" class="input-clean" rows="2">Paiement reçu avec remerciements.</textarea></div>
-                        </form>
-                        <button onclick="actions.printReceipt('${payment.id}')" class="btn-brand w-full justify-center"><i data-lucide="printer"></i> Imprimer / PDF</button>
+                            <div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Titre</label><input id="r-title" value="QUITTANCE DE LOYER" class="input-clean font-bold"></div>
+                            <div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Motif</label><input id="r-period" value="Loyer de ${payment.period}" class="input-clean"></div>
+                            <div><label class="text-xs font-bold text-slate-500 uppercase block mb-1">Note</label><textarea id="r-note" class="input-clean" rows="2">Paiement reçu avec remerciements.</textarea></div>
+                        </div>
+                        <button onclick="actions.printReceipt('${payment.id}')" class="btn-brand mt-4 w-full justify-center shadow-lg"><i data-lucide="printer"></i> Imprimer / PDF</button>
                     </div>
                 `);
             },
@@ -669,18 +686,14 @@
                 const tenant = store.get('tenants', lease.tenantId);
                 const prop = store.get('properties', lease.propertyId);
 
-                // Get manual values
                 const title = document.getElementById('r-title').value;
                 const amount = document.getElementById('r-amount').value;
                 const mode = document.getElementById('r-mode').value;
                 const period = document.getElementById('r-period').value;
                 const note = document.getElementById('r-note').value;
-                
-                // Get manual Sender values
                 const senderName = document.getElementById('r-sender-name').value;
                 const senderAddress = document.getElementById('r-sender-address').value;
                 const senderPhone = document.getElementById('r-sender-phone').value;
-                
                 const date = new Date().toLocaleDateString('fr-FR');
 
                 const html = `
@@ -697,12 +710,10 @@
                                 <p>N° Réf: #${paymentId.slice(0,8)}</p>
                             </div>
                         </div>
-
                         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
                             <p style="margin: 5px 0;">Reçu de : <strong>M./Mme ${tenant.lastname} ${tenant.firstname}</strong></p>
                             <p style="margin: 5px 0;">Pour le bien : <strong>${prop.nickname} - ${prop.address}</strong></p>
                         </div>
-
                         <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
                             <tr style="background: #000; color: #fff;">
                                 <th style="padding: 12px; text-align: left;">Désignation</th>
@@ -713,7 +724,6 @@
                                 <td style="padding: 15px; border-bottom: 1px solid #ddd; text-align: right; font-weight: bold;">${formatCurrency(amount)}</td>
                             </tr>
                         </table>
-
                         <div style="display: flex; justify-content: space-between; margin-top: 40px;">
                             <div style="width: 60%;">
                                 <p><strong>Mode de règlement:</strong> ${mode}</p>
@@ -724,10 +734,7 @@
                                 <br>
                             </div>
                         </div>
-                        
-                        <div style="position: absolute; bottom: 10px; left: 0; width: 100%; text-align: center; font-size: 10px; color: #999;">
-                            Document généré par G-IMMO le ${new Date().toLocaleString('fr-FR')}
-                        </div>
+                        <div style="position: absolute; bottom: 10px; left: 0; width: 100%; text-align: center; font-size: 10px; color: #999;">Document généré par G-IMMO le ${new Date().toLocaleString('fr-FR')}</div>
                     </div>
                 `;
 
@@ -744,7 +751,7 @@
                 }
             },
             
-            openCreateExpense: () => modal.open('Sortie Bailleur', `<form onsubmit="handlers.createExpense(event)" class="space-y-4"><input name="description" placeholder="Motif" required class="input-clean"><input type="number" name="amount" required class="input-clean"><input type="date" name="date" required value="${new Date().toISOString().split('T')[0]}" class="input-clean"><div><label class="text-xs font-bold text-rose-600 uppercase">Justificatif PDF</label><input type="file" name="file" accept="application/pdf" class="input-clean"></div><button class="btn-brand mt-4 bg-rose-600">Enregistrer Sortie</button></form>`),
+            openCreateExpense: () => modal.open('Sortie Bailleur', `<form onsubmit="handlers.createExpense(event)" class="space-y-4"><input name="description" placeholder="Motif" required class="input-clean"><input type="number" name="amount" required class="input-clean"><input type="date" name="date" required value="${new Date().toISOString().split('T')[0]}" class="input-clean bg-white"><div><label class="text-xs font-bold text-rose-600 uppercase block mb-1">Justificatif PDF</label><input type="file" name="file" accept="application/pdf" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-rose-50 file:text-rose-700"></div><button class="btn-brand mt-4 bg-rose-600 w-full shadow-lg">Enregistrer Sortie</button></form>`),
             
             closeLease: (id) => {
                 if(confirm("Confirmer le départ du locataire ? Le bail sera archivé.")) {
@@ -765,7 +772,6 @@
 
                 const lines = [];
                 lines.push("Date;Type;Bien;Locataire/Tiers;Description;Montant");
-                
                 store.data.payments.forEach(p => {
                     const d = new Date(p.date);
                     if(d>=start && d<=end) {
@@ -779,27 +785,24 @@
                      const d = new Date(e.date);
                     if(d>=start && d<=end) lines.push(`${formatDate(e.date)};SORTIE;-;-;${e.description};-${e.amount}`);
                 });
-                
                 const blob = new Blob(["\ufeff"+lines.join("\n")], {type: 'text/csv'});
                 saveAs(blob, `Situation_Bailleur_${start.toISOString().slice(0,10)}.csv`);
             },
             
             backupFull: async () => {
-                loader.show('Génération du Backup Complet...');
+                loader.show('Génération du Backup...');
                 try {
                     const zip = new JSZip();
                     zip.file("data.json", JSON.stringify(store.data));
                     const allFiles = await dbEngine.getAllFiles();
-                    
                     if(allFiles.length > 0) {
                         const folder = zip.folder("documents_pdf");
                         allFiles.forEach(f => folder.file(`${f.id}.pdf`, f.blob));
                     }
-                    
                     const content = await zip.generateAsync({type:"blob"});
                     saveAs(content, `G-IMMO_FULL_BACKUP_${new Date().toISOString().slice(0,10)}.zip`);
                 } catch(e) {
-                    alert("Erreur lors du backup: " + e.message);
+                    alert("Erreur: " + e.message);
                 } finally {
                     loader.hide();
                 }
@@ -809,13 +812,11 @@
                 const input = document.getElementById('restore-file');
                 if(!input.files[0]) return alert('Sélectionnez un fichier ZIP.');
                 if(!confirm("ATTENTION: Toutes les données actuelles seront remplacées. Continuer ?")) return;
-
                 loader.show('Restauration...');
                 try {
                     const zip = await JSZip.loadAsync(input.files[0]);
                     const dataStr = await zip.file("data.json").async("string");
                     const dataObj = JSON.parse(dataStr);
-                    
                     await dbEngine.clearFiles();
                     const folder = zip.folder("documents_pdf");
                     if(folder) {
@@ -823,18 +824,11 @@
                         folder.forEach((path, file) => {
                             promises.push(file.async("blob").then(blob => {
                                 const id = path.replace('.pdf', '');
-                                return dbEngine.saveRestoredFile({
-                                    id: id,
-                                    name: "Restored",
-                                    type: "application/pdf",
-                                    blob: blob,
-                                    date: new Date().toISOString()
-                                });
+                                return dbEngine.saveRestoredFile({ id: id, name: "Restored", type: "application/pdf", blob: blob, date: new Date().toISOString() });
                             }));
                         });
                         await Promise.all(promises);
                     }
-                    
                     store.data = dataObj;
                     store.save();
                     location.reload();
@@ -859,15 +853,12 @@
                 e.preventDefault();
                 const fd = new FormData(e.target);
                 const updates = Object.fromEntries(fd);
-                
-                // Handle file replacement
                 const file = fd.get('file');
                 if(file && file.size > 0) {
                     const fid = await dbEngine.saveFile(file);
                     updates.contractFileId = fid;
                 }
-                delete updates.file; // Don't save the file object in JSON store
-
+                delete updates.file;
                 store.update('leases', id, updates);
                 modal.close();
                 render();
@@ -879,7 +870,6 @@
                 const lid = fd.get('leaseId');
                 const per = fd.get('period');
                 const amt = parseFloat(fd.get('amount'));
-                
                 const lease = store.get('leases', lid);
                 const existing = store.data.payments.filter(p => p.leaseId === lid && p.period === per);
                 const sumExisting = existing.reduce((s, p) => s + parseFloat(p.amount), 0);
@@ -887,33 +877,24 @@
                 if (sumExisting + amt > parseFloat(lease.rentAmount)) {
                     if(!confirm(`Attention: Le montant dépasse le loyer prévu. Continuer ?`)) return;
                 }
-                
                 const file = fd.get('file'); let fid = null;
                 if(file.size > 0) fid = await dbEngine.saveFile(file);
-
                 const newId = store.add('payments', {...Object.fromEntries(fd), receiptFileId: fid}).id;
                 modal.close(); 
                 render(); 
                 showToast('Paiement enregistré');
-                
-                // Prompt for receipt generation
-                if(confirm("Voulez-vous générer un reçu maintenant ?")) {
-                    setTimeout(() => actions.openReceiptGenerator(newId), 300);
-                }
+                if(confirm("Voulez-vous générer un reçu maintenant ?")) setTimeout(() => actions.openReceiptGenerator(newId), 300);
             },
             updatePayment: async (e, id) => {
                 e.preventDefault();
                 const fd = new FormData(e.target);
                 const updates = Object.fromEntries(fd);
-
-                // Handle file replacement
                 const file = fd.get('file');
                 if(file && file.size > 0) {
                     const fid = await dbEngine.saveFile(file);
                     updates.receiptFileId = fid;
                 }
                 delete updates.file;
-
                 store.update('payments', id, updates);
                 modal.close();
                 render();
@@ -929,7 +910,17 @@
         };
 
         const modal = {
-            open: (t, c) => { document.getElementById('modal-content').innerHTML = `<div class="p-4 border-b bg-slate-50 flex justify-between items-center"><h3 class="font-bold text-slate-800">${t}</h3><button onclick="modal.close()" class="text-slate-400"><i data-lucide="x"></i></button></div><div class="p-6">${c}</div>`; document.getElementById('modal-backdrop').classList.remove('hidden'); },
+            open: (t, c) => { 
+                const m = document.getElementById('modal-content');
+                m.innerHTML = `
+                    <div class="p-4 border-b bg-slate-50 flex justify-between items-center shrink-0">
+                        <h3 class="font-bold text-slate-800 text-lg">${t}</h3>
+                        <button onclick="modal.close()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-500"><i data-lucide="x" class="w-5 h-5"></i></button>
+                    </div>
+                    <div class="p-4 sm:p-6 overflow-y-auto flex-1 h-full">${c}</div>
+                `; 
+                document.getElementById('modal-backdrop').classList.remove('hidden'); 
+            },
             close: () => document.getElementById('modal-backdrop').classList.add('hidden')
         };
 
@@ -942,8 +933,6 @@
         const init = async () => {
             store.load();
             document.getElementById('sidebar').addEventListener('click', e => { const l = e.target.closest('.nav-link'); if(l) router.navigate(l.dataset.view); });
-            document.getElementById('mobile-menu-btn').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('hidden'));
-            
             // Search
             const search = document.getElementById('global-search');
             const resBox = document.getElementById('search-results');
@@ -951,11 +940,10 @@
                 const val = e.target.value.toLowerCase().replace(/[<>]/g, '');
                 if(val.length < 2) { resBox.classList.add('hidden'); return; }
                 const hits = store.data.tenants.filter(t => t.lastname.toLowerCase().includes(val) || t.firstname.toLowerCase().includes(val));
-                resBox.innerHTML = hits.map(t => `<div class="p-3 hover:bg-slate-50 cursor-pointer border-b text-sm" onclick="router.navigate('tenantDetail', {id:'${t.id}'}); document.getElementById('search-results').classList.add('hidden')"><strong>${escapeHtml(t.lastname)} ${escapeHtml(t.firstname)}</strong><br><span class="text-xs text-slate-500">${t.phone}</span></div>`).join('') || '<div class="p-3 text-xs text-slate-400">Aucun résultat</div>';
+                resBox.innerHTML = hits.map(t => `<div class="p-4 hover:bg-slate-50 cursor-pointer border-b last:border-0" onclick="router.navigate('tenantDetail', {id:'${t.id}'}); document.getElementById('search-results').classList.add('hidden')"><div class="font-bold text-slate-900">${escapeHtml(t.lastname)} ${escapeHtml(t.firstname)}</div><div class="text-xs text-slate-500">${t.phone}</div></div>`).join('') || '<div class="p-4 text-sm text-slate-500">Aucun résultat</div>';
                 resBox.classList.remove('hidden');
             });
             document.addEventListener('click', (e) => { if(!e.target.closest('#global-search')) resBox.classList.add('hidden'); });
-
             render();
         };
         
