@@ -481,6 +481,7 @@
                                         <i data-lucide="printer" class="w-4 h-4"></i>
                                     </button>
                                     ${p.receiptFileId ? `<button onclick="actions.viewFile('${p.receiptFileId}')" class="bg-slate-100 hover:bg-emerald-100 hover:text-emerald-600 text-slate-600 p-2 rounded-full transition-colors"><i data-lucide="file-check" class="w-4 h-4"></i></button>` : ''}
+                                    <button onclick="actions.deletePayment('${p.id}')" title="Supprimer le paiement" class="bg-slate-100 hover:bg-rose-100 hover:text-rose-600 text-slate-600 p-2 rounded-full transition-colors"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
                                 </div>
                             </div>`
                         }).join('')}
@@ -631,12 +632,24 @@
                 const lease = store.get('leases', payment.leaseId);
                 const tenant = store.get('tenants', lease.tenantId);
                 const prop = store.get('properties', lease.propertyId);
+                const profile = store.data.profile;
 
                 // Formulaire de pré-configuration flexible
                 modal.open('Générer Reçu', `
                     <div class="space-y-4">
-                        <p class="text-sm text-slate-500">Modifiez les informations ci-dessous avant l'impression pour adapter le reçu (Avance, Solde, etc).</p>
-                        <form id="receipt-config-form">
+                        <p class="text-sm text-slate-500">Modifiez les informations ci-dessous avant l'impression.</p>
+                        <form id="receipt-config-form" class="space-y-3">
+                            <!-- Section Emetteur -->
+                            <div class="bg-slate-100 p-3 rounded border border-slate-200">
+                                <p class="text-xs font-bold text-slate-500 uppercase mb-2">Émetteur (Bailleur / Agence)</p>
+                                <div class="space-y-2">
+                                    <input id="r-sender-name" value="${profile.fullname}" class="input-clean" placeholder="Nom">
+                                    <input id="r-sender-address" value="${profile.address}" class="input-clean" placeholder="Adresse">
+                                    <input id="r-sender-phone" value="${profile.phone}" class="input-clean" placeholder="Téléphone">
+                                </div>
+                            </div>
+
+                            <!-- Section Transaction -->
                             <div><label class="text-xs font-bold text-slate-500 uppercase">Titre du Document</label><input id="r-title" value="QUITTANCE DE LOYER" class="input-clean font-bold"></div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div><label class="text-xs font-bold text-slate-500 uppercase">Montant</label><input id="r-amount" value="${payment.amount}" class="input-clean"></div>
@@ -662,15 +675,21 @@
                 const mode = document.getElementById('r-mode').value;
                 const period = document.getElementById('r-period').value;
                 const note = document.getElementById('r-note').value;
+                
+                // Get manual Sender values
+                const senderName = document.getElementById('r-sender-name').value;
+                const senderAddress = document.getElementById('r-sender-address').value;
+                const senderPhone = document.getElementById('r-sender-phone').value;
+                
                 const date = new Date().toLocaleDateString('fr-FR');
 
                 const html = `
                     <div style="font-family: 'Inter', sans-serif; max-width: 800px; margin: 0 auto; border: 2px solid #000; padding: 40px; position: relative;">
                         <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px;">
                             <div>
-                                <h1 style="font-size: 24px; font-weight: bold; margin: 0;">${store.data.profile.fullname}</h1>
-                                <p style="margin: 5px 0;">${store.data.profile.address}</p>
-                                <p style="margin: 0;">Tel: ${store.data.profile.phone}</p>
+                                <h1 style="font-size: 24px; font-weight: bold; margin: 0;">${senderName}</h1>
+                                <p style="margin: 5px 0;">${senderAddress}</p>
+                                <p style="margin: 0;">Tel: ${senderPhone}</p>
                             </div>
                             <div style="text-align: right;">
                                 <h2 style="font-size: 28px; font-weight: bold; color: #333; margin: 0;">${title}</h2>
@@ -715,6 +734,14 @@
                 const printArea = document.getElementById('receipt-print-area');
                 printArea.innerHTML = html;
                 window.print();
+            },
+            
+            deletePayment: (id) => {
+                if(confirm("Voulez-vous vraiment supprimer ce paiement / reçu ? Cette action est irréversible.")) {
+                    store.delete('payments', id);
+                    render();
+                    showToast('Paiement supprimé', 'error');
+                }
             },
             
             openCreateExpense: () => modal.open('Sortie Bailleur', `<form onsubmit="handlers.createExpense(event)" class="space-y-4"><input name="description" placeholder="Motif" required class="input-clean"><input type="number" name="amount" required class="input-clean"><input type="date" name="date" required value="${new Date().toISOString().split('T')[0]}" class="input-clean"><div><label class="text-xs font-bold text-rose-600 uppercase">Justificatif PDF</label><input type="file" name="file" accept="application/pdf" class="input-clean"></div><button class="btn-brand mt-4 bg-rose-600">Enregistrer Sortie</button></form>`),
